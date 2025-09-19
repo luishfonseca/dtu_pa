@@ -64,6 +64,10 @@ func (l *Lexer) Run() error {
 		return l.err
 	}
 
+	if !l.sc.Empty() {
+		return fmt.Errorf("lexer: stacked counter not empty at end of input")
+	}
+
 	return nil
 }
 

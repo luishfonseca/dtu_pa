@@ -4,6 +4,10 @@ type stackedCounter struct {
 	stack []uint16
 }
 
+func (sc *stackedCounter) Empty() bool {
+	return len(sc.stack) == 0
+}
+
 func (sc *stackedCounter) Top() uint16 {
 	return sc.stack[len(sc.stack)-1]
 }
