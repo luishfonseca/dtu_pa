@@ -174,11 +174,7 @@ func constant_pool(l *Lexer) stateFn {
 		return constant_integer_info
 	case 7: // CONSTANT_Class
 		return constant_pool_indices(1)
-	case 9: // CONSTANT_Fieldref
-		return constant_pool_indices(2)
-	case 10: // CONSTANT_Methodref
-		return constant_pool_indices(2)
-	case 12: // CONSTANT_NameAndType
+	case 9, 10, 12: // CONSTANT_Fieldref, CONSTANT_Methodref, CONSTANT_NameAndType
 		return constant_pool_indices(2)
 	default:
 		l.err = fmt.Errorf("unknown cp_info_tag: %d. See https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.4-140", int(tag))
