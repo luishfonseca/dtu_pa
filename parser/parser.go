@@ -113,10 +113,10 @@ func version(p *Parser) stateFn {
 	p.data = append(p.data, make(map[string]any))
 	p.data[0]["version"] = fmt.Sprintf("%d.%d", M, m)
 
-	return constant_pool
+	return constantPool
 }
 
-func constant_pool(p *Parser) stateFn {
+func constantPool(p *Parser) stateFn {
 	bn, err := p.expect(lexer.CP_COUNT)
 	if err != nil {
 		p.err = err
@@ -242,9 +242,9 @@ func constant_pool(p *Parser) stateFn {
 		p.data[1][fmt.Sprintf("%2d", i+1)] = v.String()
 	}
 
-	return access_flags
+	return accessFlags
 }
 
-func access_flags(p *Parser) stateFn {
+func accessFlags(p *Parser) stateFn {
 	return nil
 }

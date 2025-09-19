@@ -122,11 +122,11 @@ func version(l *Lexer) stateFn {
 
 	l.emit(MAJOR_VERSION)
 
-	return constant_pool_count
+	return constantPoolCount
 }
 
 // The value of the constant_pool_count item is equal to the number of entries in the constant_pool table plus one.
-func constant_pool_count(l *Lexer) stateFn {
+func constantPoolCount(l *Lexer) stateFn {
 	if err := l.read(2); err != nil {
 		l.err = err
 		return nil
@@ -143,14 +143,14 @@ func constant_pool_count(l *Lexer) stateFn {
 
 	l.emit(CP_COUNT)
 
-	return constant_pool
+	return constantPool
 }
 
 // Java Virtual Machine instructions do not rely on the run-time layout of classes, interfaces, class instances, or arrays. Instead, instructions refer to symbolic information in the constant_pool table.
-func constant_pool(l *Lexer) stateFn {
+func constantPool(l *Lexer) stateFn {
 	if l.sc.top() == 0 {
 		l.sc.pop()
-		return access_flags
+		return accessFlags
 	}
 
 	l.sc.dec()
@@ -165,13 +165,13 @@ func constant_pool(l *Lexer) stateFn {
 
 	switch tag {
 	case 1: // CONSTANT_Utf8
-		return constant_utf8_info
+		return constantUtf8Info
 	case 3: // CONSTANT_Integer
-		return constant_integer_info
+		return constantIntegerInfo
 	case 7: // CONSTANT_Class
-		return constant_pool_indices(1)
+		return constantPoolIndices(1)
 	case 9, 10, 12: // CONSTANT_Fieldref, CONSTANT_Methodref, CONSTANT_NameAndType
-		return constant_pool_indices(2)
+		return constantPoolIndices(2)
 	default:
 		l.err = fmt.Errorf("unknown cp_info_tag: %d. See https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.4-140", int(tag))
 		return nil
@@ -179,7 +179,7 @@ func constant_pool(l *Lexer) stateFn {
 }
 
 // Captures n indexes into the constant_pool table.
-func constant_pool_indices(n int) stateFn {
+func constantPoolIndices(n int) stateFn {
 	return func(l *Lexer) stateFn {
 		for range n {
 			if err := l.read(2); err != nil {
@@ -190,12 +190,12 @@ func constant_pool_indices(n int) stateFn {
 			l.emit(CP_INDEX)
 		}
 
-		return constant_pool
+		return constantPool
 	}
 }
 
 // The CONSTANT_Utf8_info structure is used to represent constant string values
-func constant_utf8_info(l *Lexer) stateFn {
+func constantUtf8Info(l *Lexer) stateFn {
 	if err := l.read(2); err != nil {
 		l.err = err
 		return nil
@@ -216,11 +216,11 @@ func constant_utf8_info(l *Lexer) stateFn {
 
 	l.emit(CP_UTF8)
 
-	return constant_pool
+	return constantPool
 }
 
 // The CONSTANT_Integer_info structure represents a 4-byte numeric (int) constant
-func constant_integer_info(l *Lexer) stateFn {
+func constantIntegerInfo(l *Lexer) stateFn {
 	if err := l.read(4); err != nil {
 		l.err = err
 		return nil
@@ -228,10 +228,10 @@ func constant_integer_info(l *Lexer) stateFn {
 
 	l.emit(CP_INT)
 
-	return constant_pool
+	return constantPool
 }
 
 // The value of the access_flags item is a mask of flags used to denote access permission to and properties of this field.
-func access_flags(l *Lexer) stateFn {
+func accessFlags(l *Lexer) stateFn {
 	return nil
 }
