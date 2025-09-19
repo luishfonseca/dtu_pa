@@ -64,7 +64,7 @@ func (l *Lexer) Run() error {
 		return l.err
 	}
 
-	if !l.sc.Empty() {
+	if !l.sc.empty() {
 		return fmt.Errorf("lexer: stacked counter not empty at end of input")
 	}
 
@@ -139,7 +139,7 @@ func constant_pool_count(l *Lexer) stateFn {
 	}
 
 	// The constant_pool table is indexed from 1 to constant_pool_count-1
-	l.sc.Push(n - 1)
+	l.sc.push(n - 1)
 
 	l.emit(CP_COUNT)
 
@@ -148,12 +148,12 @@ func constant_pool_count(l *Lexer) stateFn {
 
 // Java Virtual Machine instructions do not rely on the run-time layout of classes, interfaces, class instances, or arrays. Instead, instructions refer to symbolic information in the constant_pool table.
 func constant_pool(l *Lexer) stateFn {
-	if l.sc.Top() == 0 {
-		l.sc.Pop()
+	if l.sc.top() == 0 {
+		l.sc.pop()
 		return access_flags
 	}
 
-	l.sc.Dec()
+	l.sc.dec()
 
 	if err := l.read(1); err != nil {
 		l.err = err
