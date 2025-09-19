@@ -10,6 +10,8 @@ type Type int
 const (
 	EOF Type = iota
 	MAGIC
+	MINOR_VERSION
+	MAJOR_VERSION
 	UNKNOWN
 )
 
@@ -83,13 +85,30 @@ func (l *Lexer) emit(t Type) {
 	l.curr = nil
 }
 
-// magic reads the magic number at the beginning of the class file.
+// The magic item supplies the magic number identifying the class file format; it has the value 0xCAFEBABE.
 func magic(l *Lexer) stateFn {
 	if l.read(4) != 4 {
 		return nil
 	}
 
 	l.emit(MAGIC)
+
+	return version
+}
+
+// The values of the minor_version and major_version items are the minor and major version numbers of this class file.
+func version(l *Lexer) stateFn {
+	if l.read(2) != 2 {
+		return nil
+	}
+
+	l.emit(MINOR_VERSION)
+
+	if l.read(2) != 2 {
+		return nil
+	}
+
+	l.emit(MAJOR_VERSION)
 
 	return nil
 }
