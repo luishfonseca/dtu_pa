@@ -23,8 +23,6 @@ func (a *analyser) GetClassFile() string {
 }
 
 func (a *analyser) Inspect() error {
-	fmt.Printf("Inspecting %s\n", a.classFile)
-
 	tokenCh := make(chan lexer.Token)
 
 	l, err := lexer.New(a, tokenCh)
@@ -36,15 +34,15 @@ func (a *analyser) Inspect() error {
 
 	go func() {
 		if err := l.Run(); err != nil {
-			fmt.Fprintf(os.Stderr, "lexer error: %v\n", err)
+			fmt.Fprintf(os.Stderr, "error: lexer: %v\n", err)
 		}
 	}()
 
 	if err := p.Run(); err != nil {
-		return fmt.Errorf("parser error: %w", err)
+		return fmt.Errorf("parser: %w", err)
 	}
 
-	fmt.Println("Parsed data:")
+	fmt.Println("=== Parsed data ===")
 	p.PrintData()
 
 	return nil

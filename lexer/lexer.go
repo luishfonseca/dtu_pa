@@ -1,10 +1,11 @@
 package lexer
 
 import (
-	"encoding/binary"
 	"fmt"
 	"io"
 	"os"
+
+	"github.com/luishfonseca/dtu_pa/util"
 )
 
 type Type int
@@ -76,17 +77,6 @@ func (l *Lexer) read(n int) error {
 	return nil
 }
 
-func (l *Lexer) decode() (uint16, error) {
-	var n uint16
-	if nrd, err := binary.Decode(l.curr, binary.BigEndian, &n); err != nil {
-		return 0, err
-	} else if nrd != 2 {
-		return 0, fmt.Errorf("binary decode read %d bytes, expected 2", nrd)
-	}
-
-	return n, nil
-}
-
 func (l *Lexer) emit(t Type) {
 	if l.curr == nil {
 		panic("cannot emit a nil token")
@@ -138,13 +128,14 @@ func constant_pool_count(l *Lexer) stateFn {
 		return nil
 	}
 
-	if n, err := l.decode(); err != nil {
+	var n uint16
+	if err := util.Decode(l.curr, &n); err != nil {
 		l.err = err
 		return nil
-	} else {
-		// The constant_pool table is indexed from 1 to constant_pool_count-1
-		l.sc.Push(n - 1)
 	}
+
+	// The constant_pool table is indexed from 1 to constant_pool_count-1
+	l.sc.Push(n - 1)
 
 	l.emit(CP_COUNT)
 
@@ -203,8 +194,8 @@ func constant_utf8_info(l *Lexer) stateFn {
 		return nil
 	}
 
-	n, err := l.decode()
-	if err != nil {
+	var n uint16
+	if err := util.Decode(l.curr, &n); err != nil {
 		l.err = err
 		return nil
 	}

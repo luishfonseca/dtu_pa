@@ -31,8 +31,11 @@ var inspectCmd = &cobra.Command{
 
 		return nil
 	},
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return analyser.New(args[0]).Inspect()
+	Run: func(cmd *cobra.Command, args []string) {
+		if err := analyser.New(args[0]).Inspect(); err != nil {
+			fmt.Fprintf(os.Stderr, "error: %v\n", err)
+			os.Exit(1)
+		}
 	},
 }
 

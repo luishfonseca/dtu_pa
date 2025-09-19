@@ -1,16 +1,18 @@
 package parser
 
 import (
-	"encoding/binary"
 	"fmt"
+	"sort"
 
 	"github.com/luishfonseca/dtu_pa/lexer"
+	"github.com/luishfonseca/dtu_pa/util"
 )
 
 type stateFn func(*Parser) stateFn
 
 type Parser struct {
 	tokenCh <-chan lexer.Token
+	cp      []cpInfo
 	data    []map[string]any
 	err     error
 }
@@ -30,8 +32,15 @@ func (p *Parser) PrintData() {
 			fmt.Println("----")
 		}
 
-		for k, v := range m {
-			fmt.Printf("%s: %v\n", k, v)
+		keys := make([]string, 0, len(m))
+		for k := range m {
+			keys = append(keys, k)
+		}
+
+		sort.Strings(keys)
+
+		for _, k := range keys {
+			fmt.Printf("%s: %v\n", k, m[k])
 		}
 	}
 }
@@ -89,21 +98,15 @@ func version(p *Parser) stateFn {
 		return nil
 	}
 
-	// binary.Decode() big-endian
-	var m, M uint16
-	if nrd, err := binary.Decode(mb, binary.BigEndian, &m); err != nil {
+	var m uint16
+	if err := util.Decode(mb, &m); err != nil {
 		p.err = err
-		return nil
-	} else if nrd != 2 {
-		p.err = fmt.Errorf("binary decode read %d bytes, expected 2", nrd)
 		return nil
 	}
 
-	if nrd, err := binary.Decode(Mb, binary.BigEndian, &M); err != nil {
+	var M uint16
+	if err := util.Decode(Mb, &M); err != nil {
 		p.err = err
-		return nil
-	} else if nrd != 2 {
-		p.err = fmt.Errorf("binary decode read %d bytes, expected 2", nrd)
 		return nil
 	}
 
@@ -114,5 +117,134 @@ func version(p *Parser) stateFn {
 }
 
 func constant_pool(p *Parser) stateFn {
+	bn, err := p.expect(lexer.CP_COUNT)
+	if err != nil {
+		p.err = err
+		return nil
+	}
+
+	var n uint16
+	if err := util.Decode(bn, &n); err != nil {
+		p.err = err
+		return nil
+	}
+
+	p.cp = make([]cpInfo, n-1) // The constant_pool table is indexed from 1 to constant_pool_count-1
+	for i := range n - 1 {
+		b, err := p.expect(lexer.CP_INFO_TAG)
+		if err != nil {
+			p.err = err
+			return nil
+		}
+
+		tag := b[0]
+		switch tag {
+		case 1: // CONSTANT_Utf8
+			b, err := p.expect(lexer.CP_UTF8)
+			if err != nil {
+				p.err = err
+				return nil
+			}
+
+			p.cp[i] = newConstantUtf8Info(b)
+		case 3: // CONSTANT_Integer
+			b, err := p.expect(lexer.CP_INT)
+			if err != nil {
+				p.err = err
+				return nil
+			}
+
+			if info, err := newConstantIntegerInfo(b); err != nil {
+				p.err = err
+				return nil
+			} else {
+				p.cp[i] = info
+			}
+		case 7: // CONSTANT_Class
+			b, err := p.expect(lexer.CP_INDEX)
+			if err != nil {
+				p.err = err
+				return nil
+			}
+
+			if info, err := newConstantClassInfo(b, p.cp); err != nil {
+				p.err = err
+				return nil
+			} else {
+				p.cp[i] = info
+			}
+		case 9: // CONSTANT_Fieldref
+			bClass, err := p.expect(lexer.CP_INDEX)
+			if err != nil {
+				p.err = err
+				return nil
+			}
+
+			bNameAndType, err := p.expect(lexer.CP_INDEX)
+			if err != nil {
+				p.err = err
+				return nil
+			}
+
+			if info, err := newConstantFieldrefInfo(bClass, bNameAndType, p.cp); err != nil {
+				p.err = err
+				return nil
+			} else {
+				p.cp[i] = info
+			}
+		case 10: // CONSTANT_Methodref
+			bClass, err := p.expect(lexer.CP_INDEX)
+			if err != nil {
+				p.err = err
+				return nil
+			}
+
+			bNameAndType, err := p.expect(lexer.CP_INDEX)
+			if err != nil {
+				p.err = err
+				return nil
+			}
+
+			if info, err := newConstantMethodrefInfo(bClass, bNameAndType, p.cp); err != nil {
+				p.err = err
+				return nil
+			} else {
+				p.cp[i] = info
+			}
+		case 12: // CONSTANT_NameAndType
+			bName, err := p.expect(lexer.CP_INDEX)
+			if err != nil {
+				p.err = err
+				return nil
+			}
+
+			bDescriptor, err := p.expect(lexer.CP_INDEX)
+			if err != nil {
+				p.err = err
+				return nil
+			}
+
+			if info, err := newConstantNameAndTypeInfo(bName, bDescriptor, p.cp); err != nil {
+				p.err = err
+				return nil
+			} else {
+				p.cp[i] = info
+			}
+		default:
+			p.err = fmt.Errorf("unknown cp_info_tag: %d. See https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.4-140", int(tag))
+			return nil
+		}
+	}
+
+	p.data[0]["constant pool count"] = n - 1
+	p.data = append(p.data, make(map[string]any))
+	for i, v := range p.cp {
+		p.data[1][fmt.Sprintf("%2d", i+1)] = v.String()
+	}
+
+	return access_flags
+}
+
+func access_flags(p *Parser) stateFn {
 	return nil
 }
