@@ -2,6 +2,7 @@ package analyser
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/luishfonseca/dtu_pa/lexer"
 )
@@ -30,7 +31,11 @@ func (a *analyser) Inspect() error {
 		return fmt.Errorf("could not create lexer: %w", err)
 	}
 
-	go l.Run()
+	go func() {
+		if err := l.Run(); err != nil {
+			fmt.Fprintf(os.Stderr, "lexer error: %v\n", err)
+		}
+	}()
 
 	for token := range tokenCh {
 		fmt.Printf("Token: %+v\n", token)
