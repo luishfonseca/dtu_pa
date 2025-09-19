@@ -17,9 +17,11 @@ const (
 	MAJOR_VERSION
 	CP_COUNT
 	CP_INDEX
+	CP_NULLABLE_INDEX
 	CP_INFO_TAG
 	CP_UTF8
 	CP_INT
+	ACCESS_FLAGS
 )
 
 type Token struct {
@@ -233,5 +235,40 @@ func constantIntegerInfo(l *Lexer) stateFn {
 
 // The value of the access_flags item is a mask of flags used to denote access permission to and properties of this field.
 func accessFlags(l *Lexer) stateFn {
+	if err := l.read(2); err != nil {
+		l.err = err
+		return nil
+	}
+
+	l.emit(ACCESS_FLAGS)
+
+	return thisClass
+}
+
+// The value of the this_class item must be a valid index into the constant_pool table.
+func thisClass(l *Lexer) stateFn {
+	if err := l.read(2); err != nil {
+		l.err = err
+		return nil
+	}
+
+	l.emit(CP_INDEX)
+
+	return superClass
+}
+
+// The value of the this_class item must be a valid index into the constant_pool table.
+func superClass(l *Lexer) stateFn {
+	if err := l.read(2); err != nil {
+		l.err = err
+		return nil
+	}
+
+	l.emit(CP_NULLABLE_INDEX)
+
+	return interfacesCount
+}
+
+func interfacesCount(l *Lexer) stateFn {
 	return nil
 }
