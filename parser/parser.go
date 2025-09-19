@@ -242,9 +242,27 @@ func constantPool(p *Parser) stateFn {
 		p.data[1][fmt.Sprintf("%2d", i+1)] = v.String()
 	}
 
-	return accessFlags
+	return access
 }
 
-func accessFlags(p *Parser) stateFn {
+func access(p *Parser) stateFn {
+	b, err := p.expect(lexer.ACCESS_FLAGS)
+	if err != nil {
+		p.err = err
+		return nil
+	}
+
+	var af uint16
+	if err := util.Decode(b, &af); err != nil {
+		p.err = err
+		return nil
+	}
+
+	afs := accessFlagsFromMask(af)
+	p.data[0]["access flags"] = make([]string, len(afs))
+	for i, af := range afs {
+		p.data[0]["access flags"].([]string)[i] = fmt.Sprintf("0x%04X", af.mask())
+	}
+
 	return nil
 }
