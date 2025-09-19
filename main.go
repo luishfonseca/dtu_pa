@@ -1,6 +1,6 @@
 package main
 
-import "github.com/luishfonseca/dtu-program-analysis/cmd"
+import "github.com/luishfonseca/dtu_pa/cmd"
 
 func main() {
 	cmd.Execute()

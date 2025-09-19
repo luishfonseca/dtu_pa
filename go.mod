@@ -1,4 +1,4 @@
-module github.com/luishfonseca/dtu-program-analysis
+module github.com/luishfonseca/dtu_pa
 
 go 1.24.6
 

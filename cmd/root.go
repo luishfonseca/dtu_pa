@@ -8,8 +8,8 @@ import (
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "pa",
-	Short: "Program Analyser for DTU's 02242 Program Analysis",
+	Use:   "dtu_pa",
+	Short: "Program Analyser for DTU's 25/26 edition of Program Analysis",
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 {
 			cmd.Help()
