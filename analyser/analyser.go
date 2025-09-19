@@ -5,20 +5,21 @@ import (
 	"os"
 
 	"github.com/luishfonseca/dtu_pa/lexer"
+	"github.com/luishfonseca/dtu_pa/parser"
 )
 
 type analyser struct {
 	classFile string
 }
 
-func (a *analyser) GetClassFile() string {
-	return a.classFile
-}
-
 func New(classFile string) *analyser {
 	return &analyser{
 		classFile: classFile,
 	}
+}
+
+func (a *analyser) GetClassFile() string {
+	return a.classFile
 }
 
 func (a *analyser) Inspect() error {
@@ -31,15 +32,20 @@ func (a *analyser) Inspect() error {
 		return fmt.Errorf("could not create lexer: %w", err)
 	}
 
+	p := parser.New(a, tokenCh)
+
 	go func() {
 		if err := l.Run(); err != nil {
 			fmt.Fprintf(os.Stderr, "lexer error: %v\n", err)
 		}
 	}()
 
-	for token := range tokenCh {
-		fmt.Printf("Token: %+v\n", token)
+	if err := p.Run(); err != nil {
+		return fmt.Errorf("parser error: %w", err)
 	}
+
+	fmt.Println("Parsed data:")
+	p.PrintData()
 
 	return nil
 }
