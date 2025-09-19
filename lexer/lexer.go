@@ -146,6 +146,7 @@ func constant_pool_count(l *Lexer) stateFn {
 	return constant_pool
 }
 
+// Java Virtual Machine instructions do not rely on the run-time layout of classes, interfaces, class instances, or arrays. Instead, instructions refer to symbolic information in the constant_pool table.
 func constant_pool(l *Lexer) stateFn {
 	if l.sc.Top() == 0 {
 		l.sc.Pop()
@@ -177,6 +178,7 @@ func constant_pool(l *Lexer) stateFn {
 	}
 }
 
+// Captures n indexes into the constant_pool table.
 func constant_pool_indices(n int) stateFn {
 	return func(l *Lexer) stateFn {
 		for range n {
@@ -192,6 +194,7 @@ func constant_pool_indices(n int) stateFn {
 	}
 }
 
+// The CONSTANT_Utf8_info structure is used to represent constant string values
 func constant_utf8_info(l *Lexer) stateFn {
 	if err := l.read(2); err != nil {
 		l.err = err
@@ -216,6 +219,7 @@ func constant_utf8_info(l *Lexer) stateFn {
 	return constant_pool
 }
 
+// The CONSTANT_Integer_info structure represents a 4-byte numeric (int) constant
 func constant_integer_info(l *Lexer) stateFn {
 	if err := l.read(4); err != nil {
 		l.err = err
@@ -227,6 +231,7 @@ func constant_integer_info(l *Lexer) stateFn {
 	return constant_pool
 }
 
+// The value of the access_flags item is a mask of flags used to denote access permission to and properties of this field.
 func access_flags(l *Lexer) stateFn {
 	return nil
 }
