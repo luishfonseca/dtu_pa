@@ -264,5 +264,45 @@ func access(p *Parser) stateFn {
 		p.data[0]["access flags"].([]string)[i] = fmt.Sprintf("0x%04X", af.mask())
 	}
 
+	return thisClass
+}
+
+func thisClass(p *Parser) stateFn {
+	b, err := p.expect(lexer.CP_INDEX)
+	if err != nil {
+		p.err = err
+		return nil
+	}
+
+	if info, err := resolveIndex(p.cp, b); err != nil {
+		p.err = err
+		return nil
+	} else {
+		p.data[0]["this class"] = (*info).String()
+	}
+
+	return superClass
+}
+
+func superClass(p *Parser) stateFn {
+	b, err := p.expect(lexer.CP_NULLABLE_INDEX)
+	if err != nil {
+		p.err = err
+		return nil
+	}
+
+	if len(b) == 2 && b[0] == 0 && b[1] == 0 {
+		p.data[0]["super class"] = "None"
+	} else if info, err := resolveIndex(p.cp, b); err != nil {
+		p.err = err
+		return nil
+	} else {
+		p.data[0]["super class"] = (*info).String()
+	}
+
+	return interfacesCount
+}
+
+func interfacesCount(p *Parser) stateFn {
 	return nil
 }
