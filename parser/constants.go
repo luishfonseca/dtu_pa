@@ -30,7 +30,7 @@ func newConstantUtf8Info(b []byte) *constantUtf8Info {
 }
 
 func (c constantUtf8Info) String() string {
-	return fmt.Sprintf("<Utf8: %s>", c.str)
+	return fmt.Sprintf("<Utf8: \"%s\">", c.str)
 }
 
 type constantIntegerInfo struct {

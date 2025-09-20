@@ -10,11 +10,13 @@ import (
 )
 
 type Parser struct {
-	tokenCh <-chan lexer.Token
-	cp      []cpInfo
-	fields  []fieldInfo
-	data    map[string]map[string]any
-	err     error
+	tokenCh    <-chan lexer.Token
+	cp         []cpInfo
+	fields     []memberInfo
+	methods    []memberInfo
+	attributes []cpInfo
+	data       map[string]map[string]any
+	err        error
 }
 
 type ConfigProvider interface {
@@ -324,7 +326,7 @@ func fields(p *Parser) state.Fn[*Parser] {
 			return state.Fail[*Parser](err)
 		}
 
-		info, err := newFieldInfo(bAccessFlags, bName, bDescriptor, p.cp)
+		info, err := newMemberInfo(FIELD, bAccessFlags, bName, bDescriptor, p.cp)
 		if err != nil {
 			return state.Fail[*Parser](err)
 		}
@@ -363,5 +365,104 @@ func fields(p *Parser) state.Fn[*Parser] {
 }
 
 func methods(p *Parser) state.Fn[*Parser] {
+	bn, err := p.expect(lexer.METHODS_COUNT)
+	if err != nil {
+		return state.Fail[*Parser](err)
+	}
+
+	var n uint16
+	if err := util.Decode(bn, &n); err != nil {
+		return state.Fail[*Parser](err)
+	}
+
+	for range n {
+		bAccessFlags, err := p.expect(lexer.ACCESS_FLAGS)
+		if err != nil {
+			return state.Fail[*Parser](err)
+		}
+
+		bName, err := p.expect(lexer.CP_INDEX)
+		if err != nil {
+			return state.Fail[*Parser](err)
+		}
+
+		bDescriptor, err := p.expect(lexer.CP_INDEX)
+		if err != nil {
+			return state.Fail[*Parser](err)
+		}
+
+		info, err := newMemberInfo(METHOD, bAccessFlags, bName, bDescriptor, p.cp)
+		if err != nil {
+			return state.Fail[*Parser](err)
+		}
+
+		bn, err := p.expect(lexer.ATTRIBUTES_COUNT)
+		if err != nil {
+			return state.Fail[*Parser](err)
+		}
+
+		var n uint16
+		if err := util.Decode(bn, &n); err != nil {
+			return state.Fail[*Parser](err)
+		}
+
+		for range n {
+			bAttributeName, err := p.expect(lexer.CP_INDEX)
+			if err != nil {
+				return state.Fail[*Parser](err)
+			}
+
+			if err := info.appendAttribute(bAttributeName, p.cp); err != nil {
+				return state.Fail[*Parser](err)
+			}
+		}
+
+		p.methods = append(p.methods, *info)
+	}
+
+	p.data["0. Class"]["methods count"] = n
+	p.data["3. Methods"] = make(map[string]any, len(p.methods))
+	for i, v := range p.methods {
+		p.data["3. Methods"][fmt.Sprintf("%2d", i+1)] = v.String()
+	}
+	return attributes
+}
+
+func attributes(p *Parser) state.Fn[*Parser] {
+	bn, err := p.expect(lexer.ATTRIBUTES_COUNT)
+	if err != nil {
+		return state.Fail[*Parser](err)
+	}
+
+	var n uint16
+	if err := util.Decode(bn, &n); err != nil {
+		return state.Fail[*Parser](err)
+	}
+
+	for range n {
+		bAttributeName, err := p.expect(lexer.CP_INDEX)
+		if err != nil {
+			return state.Fail[*Parser](err)
+		}
+
+		name, err := resolveIndex(p.cp, bAttributeName)
+		if err != nil {
+			return state.Fail[*Parser](err)
+		}
+
+		p.attributes = append(p.attributes, *name)
+	}
+
+	p.data["0. Class"]["attributes"] = p.attributes
+
+	return end
+}
+
+func end(p *Parser) state.Fn[*Parser] {
+	_, err := p.expect(lexer.EOF)
+	if err != nil {
+		return state.Fail[*Parser](err)
+	}
+
 	return nil
 }

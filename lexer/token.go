@@ -17,6 +17,7 @@ const (
 	INTERFACES_COUNT
 	FIELDS_COUNT
 	ATTRIBUTES_COUNT
+	METHODS_COUNT
 )
 
 type Token struct {

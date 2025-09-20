@@ -39,9 +39,12 @@ func (af accessFlags) decompose() []accessFlags {
 }
 
 func (af accessFlags) String() string {
-	encoded := "<Flags:"
-	for _, m := range af.decompose() {
-		encoded += fmt.Sprintf(" 0x%04X", uint16(m.mask()))
+	encoded := "<Flags: ["
+	for i, m := range af.decompose() {
+		if i > 0 {
+			encoded += " "
+		}
+		encoded += fmt.Sprintf("0x%04X", uint16(m.mask()))
 	}
-	return encoded + ">"
+	return encoded + "]>"
 }

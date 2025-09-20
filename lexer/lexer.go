@@ -144,18 +144,6 @@ func constantPoolInfo(l *Lexer) state.Fn[*Lexer] {
 	}
 }
 
-// Captures n indexes pointing the constant_pool table and continues to next.
-func constantPoolIndices(l *Lexer, n int, next state.Fn[*Lexer]) state.Fn[*Lexer] {
-	return state.RepeatN(n, func() error {
-		if err := l.read(2); err != nil {
-			return err
-		}
-
-		l.emit(CP_INDEX)
-		return nil
-	}, next)
-}
-
 // The CONSTANT_Utf8_info structure is used to represent constant string values
 func constantUtf8Info(l *Lexer) state.Fn[*Lexer] {
 	if err := l.read(2); err != nil {
@@ -232,20 +220,57 @@ func fields(l *Lexer) state.Fn[*Lexer] {
 }
 
 func field_info(l *Lexer) state.Fn[*Lexer] {
-	return accessFlags(constantPoolIndices(l, 2, attributesCount))
+	return accessFlags(constantPoolIndices(l, 2, fieldAttributesCount))
 }
 
-func attributesCount(l *Lexer) state.Fn[*Lexer] {
-	return count(ATTRIBUTES_COUNT, attributes)
+func fieldAttributesCount(l *Lexer) state.Fn[*Lexer] {
+	return count(ATTRIBUTES_COUNT, fieldAttributes)
 }
 
-func attributes(l *Lexer) state.Fn[*Lexer] {
-	return repeatUntil(func(l *Lexer) state.Fn[*Lexer] {
-		return state.Fail[*Lexer](fmt.Errorf("attributes not implemented"))
-	}, fields)
+func fieldAttributes(l *Lexer) state.Fn[*Lexer] {
+	return attributes(fields)
 }
 
 // The value of the methods_count item gives the number of method_info structures in the methods table.
 func methodsCount(l *Lexer) state.Fn[*Lexer] {
+	return count(METHODS_COUNT, methods)
+}
+
+// Each method, including each instance initialization method and the class or interface initialization method, is described by a method_info structure.
+func methods(l *Lexer) state.Fn[*Lexer] {
+	return repeatUntil(method_info, classAttributesCount)
+}
+
+func method_info(l *Lexer) state.Fn[*Lexer] {
+	return accessFlags(constantPoolIndices(l, 2, methodAttributesCount))
+}
+
+func methodAttributesCount(l *Lexer) state.Fn[*Lexer] {
+	return count(ATTRIBUTES_COUNT, methodAttributes)
+}
+
+func methodAttributes(l *Lexer) state.Fn[*Lexer] {
+	return attributes(methods)
+}
+
+func classAttributesCount(l *Lexer) state.Fn[*Lexer] {
+	return count(ATTRIBUTES_COUNT, classAttributes)
+}
+
+func classAttributes(l *Lexer) state.Fn[*Lexer] {
+	return attributes(end)
+}
+
+func end(l *Lexer) state.Fn[*Lexer] {
+	if err := l.read(1); err != io.EOF {
+		if err != nil {
+			return state.Fail[*Lexer](err)
+		}
+
+		return state.Fail[*Lexer](fmt.Errorf("expected EOF"))
+	}
+
+	l.emit(EOF)
+
 	return nil
 }
