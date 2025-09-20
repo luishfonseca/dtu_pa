@@ -42,6 +42,16 @@ func (a *analyser) Inspect() error {
 		return fmt.Errorf("parser: %w", err)
 	}
 
+	lexerDone := true
+	for t := range tokenCh {
+		lexerDone = false
+		fmt.Printf("Token: %v, Bytes: % X\n", t.Type, t.Bytes)
+	}
+
+	if !lexerDone {
+		return fmt.Errorf("parser finished before receiving all tokens from lexer")
+	}
+
 	fmt.Println("=== Parsed data ===")
 	p.PrintData()
 

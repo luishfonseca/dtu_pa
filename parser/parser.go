@@ -300,9 +300,32 @@ func superClass(p *Parser) stateFn {
 		p.data[0]["super class"] = (*info).String()
 	}
 
-	return interfacesCount
+	return interfaces
 }
 
-func interfacesCount(p *Parser) stateFn {
+func interfaces(p *Parser) stateFn {
+	bn, err := p.expect(lexer.INTERFACES_COUNT)
+	if err != nil {
+		p.err = err
+		return nil
+	}
+
+	var n uint16
+	if err := util.Decode(bn, &n); err != nil {
+		p.err = err
+		return nil
+	}
+
+	p.data[0]["interfaces count"] = n
+
+	for range n {
+		p.err = fmt.Errorf("interfaces not implemented")
+		return nil
+	}
+
+	return fields
+}
+
+func fields(p *Parser) stateFn {
 	return nil
 }
