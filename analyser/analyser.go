@@ -52,7 +52,6 @@ func (a *analyser) Inspect() error {
 		return fmt.Errorf("parser finished before receiving all tokens from lexer")
 	}
 
-	fmt.Println("=== Parsed data ===")
 	p.PrintData()
 
 	return nil

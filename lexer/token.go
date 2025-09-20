@@ -1,0 +1,25 @@
+package lexer
+
+type Type int
+
+const (
+	EOF Type = iota
+	MAGIC
+	MINOR_VERSION
+	MAJOR_VERSION
+	CP_COUNT
+	CP_INDEX
+	CP_NULLABLE_INDEX
+	CP_INFO_TAG
+	CP_UTF8
+	CP_INT
+	ACCESS_FLAGS
+	INTERFACES_COUNT
+	FIELDS_COUNT
+	ATTRIBUTES_COUNT
+)
+
+type Token struct {
+	Type  Type
+	Bytes []byte
+}

@@ -1,6 +1,8 @@
 package parser
 
-type accessFlags int
+import "fmt"
+
+type accessFlags uint16
 
 const (
 	ACC_PUBLIC accessFlags = iota
@@ -19,27 +21,27 @@ const (
 	ACC_ANNOTATION
 	ACC_ENUM
 	ACC_MANDATED
+	ACCESS_FLAGS_COUNT
 )
 
-func (af accessFlags) mask() uint16 {
+func (af accessFlags) mask() accessFlags {
 	return 1 << af
 }
 
-func maskFromAccessFlags(afs []accessFlags) uint16 {
-	m := uint16(0)
-	for _, af := range afs {
-		m |= af.mask()
-	}
-	return m
-}
-
-func accessFlagsFromMask(m uint16) []accessFlags {
+func (af accessFlags) decompose() []accessFlags {
 	afs := []accessFlags{}
-	for af := range 16 {
-		af := accessFlags(af)
-		if m&af.mask() != 0 {
-			afs = append(afs, af)
+	for m := range ACCESS_FLAGS_COUNT {
+		if af&m.mask() != 0 {
+			afs = append(afs, m)
 		}
 	}
 	return afs
+}
+
+func (af accessFlags) String() string {
+	encoded := "<Flags:"
+	for _, m := range af.decompose() {
+		encoded += fmt.Sprintf(" 0x%04X", uint16(m.mask()))
+	}
+	return encoded + ">"
 }
