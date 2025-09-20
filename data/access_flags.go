@@ -1,11 +1,11 @@
-package parser
+package data
 
 import "fmt"
 
-type accessFlags uint16
+type AccessFlags uint16
 
 const (
-	ACC_PUBLIC accessFlags = iota
+	ACC_PUBLIC AccessFlags = iota
 	ACC_PRIVATE
 	ACC_PROTECTED
 	ACC_STATIC
@@ -24,12 +24,12 @@ const (
 	ACCESS_FLAGS_COUNT
 )
 
-func (af accessFlags) mask() accessFlags {
+func (af AccessFlags) mask() AccessFlags {
 	return 1 << af
 }
 
-func (af accessFlags) decompose() []accessFlags {
-	afs := []accessFlags{}
+func (af AccessFlags) decompose() []AccessFlags {
+	afs := []AccessFlags{}
 	for m := range ACCESS_FLAGS_COUNT {
 		if af&m.mask() != 0 {
 			afs = append(afs, m)
@@ -38,7 +38,7 @@ func (af accessFlags) decompose() []accessFlags {
 	return afs
 }
 
-func (af accessFlags) String() string {
+func (af AccessFlags) String() string {
 	encoded := "<Flags: ["
 	for i, m := range af.decompose() {
 		if i > 0 {

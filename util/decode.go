@@ -18,3 +18,15 @@ func Decode(buf []byte, n any) error {
 
 	return nil
 }
+
+func Encode(n any) ([]byte, error) {
+	buf := make([]byte, binary.Size(n))
+
+	if nwr, err := binary.Encode(buf, binary.BigEndian, n); err != nil {
+		return nil, err
+	} else if nwr != binary.Size(n) {
+		return nil, fmt.Errorf("binary encode wrote %d bytes, expected %d", nwr, binary.Size(n))
+	}
+
+	return buf, nil
+}

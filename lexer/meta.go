@@ -7,7 +7,7 @@ import (
 	"github.com/luishfonseca/dtu_pa/util"
 )
 
-func count(emit Type, next state.Fn[*Lexer]) state.Fn[*Lexer] {
+func count(emit TokenType, next state.Fn[*Lexer]) state.Fn[*Lexer] {
 	return func(l *Lexer) state.Fn[*Lexer] {
 		if err := l.read(2); err != nil {
 			return state.Fail[*Lexer](err)
@@ -88,13 +88,17 @@ func attribute(l *Lexer, next state.Fn[*Lexer]) state.Fn[*Lexer] {
 			return state.Fail[*Lexer](err)
 		}
 
-		end, err := l.input.Seek(int64(size), io.SeekCurrent) // Skip attribute content
+		_, err = l.input.Seek(int64(size), io.SeekCurrent) // Skip attribute content
 		if err != nil {
 			return state.Fail[*Lexer](err)
 		}
 
-		_ = begin
-		_ = end // Save for attribute requests
+		bBegin, err := util.Encode(begin)
+		if err != nil {
+			return state.Fail[*Lexer](err)
+		}
+		l.curr = bBegin
+		l.emit(ATTRIBUTE_BEGIN)
 
 		return next
 	})

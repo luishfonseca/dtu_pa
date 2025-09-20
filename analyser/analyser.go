@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/luishfonseca/dtu_pa/data"
 	"github.com/luishfonseca/dtu_pa/lexer"
 	"github.com/luishfonseca/dtu_pa/parser"
 )
@@ -24,13 +25,14 @@ func (a *analyser) GetClassFile() string {
 
 func (a *analyser) Inspect() error {
 	tokenCh := make(chan lexer.Token)
+	reqCh := make(chan data.AttributeHandle)
 
-	l, err := lexer.New(a, tokenCh)
+	l, err := lexer.New(a, tokenCh, reqCh)
 	if err != nil {
 		return fmt.Errorf("could not create lexer: %w", err)
 	}
 
-	p := parser.New(a, tokenCh)
+	p := parser.New(a, tokenCh, reqCh)
 
 	go func() {
 		if err := l.Run(); err != nil {
@@ -52,7 +54,7 @@ func (a *analyser) Inspect() error {
 		return fmt.Errorf("parser finished before receiving all tokens from lexer")
 	}
 
-	p.PrintData()
+	fmt.Println(p.Class)
 
 	return nil
 }
