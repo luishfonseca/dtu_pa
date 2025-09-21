@@ -25,14 +25,14 @@ func (a *analyser) GetClassFile() string {
 
 func (a *analyser) Inspect() error {
 	tokenCh := make(chan lexer.Token)
-	reqCh := make(chan data.AttributeHandle)
+	dataCh := make(chan data.Data)
 
-	l, err := lexer.New(a, tokenCh, reqCh)
+	l, err := lexer.New(a, tokenCh)
 	if err != nil {
 		return fmt.Errorf("could not create lexer: %w", err)
 	}
 
-	p := parser.New(a, tokenCh, reqCh)
+	p := parser.New(a, tokenCh, dataCh)
 
 	go func() {
 		if err := l.Run(); err != nil {
@@ -40,21 +40,27 @@ func (a *analyser) Inspect() error {
 		}
 	}()
 
-	if err := p.Run(); err != nil {
-		return fmt.Errorf("parser: %w", err)
-	}
+	go func() {
+		if err := p.Run(); err != nil {
+			fmt.Fprintf(os.Stderr, "error: parser: %v\n", err)
+			return
+		}
 
-	lexerDone := true
-	for t := range tokenCh {
-		lexerDone = false
-		fmt.Printf("Token: %v, Bytes: % X\n", t.Type, t.Bytes)
-	}
+		lexerDone := true
+		for t := range tokenCh {
+			lexerDone = false
+			fmt.Printf("Token: %v, Bytes: % X\n", t.Type, t.Bytes)
+		}
 
-	if !lexerDone {
-		return fmt.Errorf("parser finished before receiving all tokens from lexer")
-	}
+		if !lexerDone {
+			fmt.Fprint(os.Stderr, "error: parser finished before receiving all tokens from lexer")
+			return
+		}
+	}()
 
-	fmt.Println(p.Class)
+	for d := range dataCh {
+		fmt.Println(d)
+	}
 
 	return nil
 }

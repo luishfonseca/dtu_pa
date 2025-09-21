@@ -23,8 +23,8 @@ func (m MemberType) String() string {
 type MemberInfo struct {
 	MemberType  MemberType
 	AccessFlags AccessFlags
-	Name        *CpInfo
-	Descriptor  *CpInfo
+	Name        *Data
+	Descriptor  *Data
 	Attributes  []AttributeHandle
 }
 

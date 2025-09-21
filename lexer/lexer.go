@@ -5,14 +5,12 @@ import (
 	"io"
 	"os"
 
-	"github.com/luishfonseca/dtu_pa/data"
 	"github.com/luishfonseca/dtu_pa/state"
 )
 
 type Lexer struct {
 	input   io.ReadSeekCloser
 	tokenCh chan<- Token
-	reqCh   <-chan data.AttributeHandle
 	sc      stackedCounter
 	curr    []byte
 	err     error
@@ -22,7 +20,7 @@ type ConfigProvider interface {
 	GetClassFile() string
 }
 
-func New(cfg ConfigProvider, tokenCh chan<- Token, reqCh <-chan data.AttributeHandle) (*Lexer, error) {
+func New(cfg ConfigProvider, tokenCh chan<- Token) (*Lexer, error) {
 	input, err := os.Open(cfg.GetClassFile())
 	if err != nil {
 		return nil, err
@@ -31,7 +29,6 @@ func New(cfg ConfigProvider, tokenCh chan<- Token, reqCh <-chan data.AttributeHa
 	return &Lexer{
 		input:   input,
 		tokenCh: tokenCh,
-		reqCh:   reqCh,
 	}, nil
 }
 

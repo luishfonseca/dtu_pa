@@ -11,18 +11,18 @@ import (
 
 type Parser struct {
 	tokenCh <-chan lexer.Token
-	reqCh   chan<- data.AttributeHandle
-	Class   data.Class
+	dataCh  chan<- data.Data
+	data    []data.Data
 	err     error
 }
 
 type ConfigProvider interface {
 }
 
-func New(cfg ConfigProvider, tokenCh <-chan lexer.Token, reqCh chan<- data.AttributeHandle) *Parser {
+func New(cfg ConfigProvider, tokenCh <-chan lexer.Token, dataCh chan<- data.Data) *Parser {
 	return &Parser{
 		tokenCh: tokenCh,
-		reqCh:   reqCh,
+		dataCh:  dataCh,
 	}
 }
 
@@ -31,6 +31,8 @@ func (p *Parser) Fail(err error) {
 }
 
 func (p *Parser) Run() error {
+	p.data = append(p.data, &data.DecompiledClass{})
+
 	state.Run(p, magic)
 
 	if p.err != nil {
@@ -90,7 +92,7 @@ func version(p *Parser) state.Fn[*Parser] {
 		return state.Fail[*Parser](err)
 	}
 
-	p.Class.Version = fmt.Sprintf("%d.%d", M, m)
+	p.data[0].DecompiledClass().Version = fmt.Sprintf("%d.%d", M, m)
 
 	return constantPool
 }
@@ -102,7 +104,7 @@ func constantPool(p *Parser) state.Fn[*Parser] {
 	}
 
 	// The constant_pool table is indexed from 1 to constant_pool_count-1
-	p.Class.ConstantPool = make([]data.CpInfo, n-1)
+	p.data[0].DecompiledClass().ConstantPool = make([]data.Data, n-1)
 
 	for i := range n - 1 {
 		var tag uint8
@@ -112,7 +114,7 @@ func constantPool(p *Parser) state.Fn[*Parser] {
 
 		switch tag {
 		case 1: // CONSTANT_Utf8
-			info := data.CpUtf8Info{}
+			info := &data.ConstantUtf8{}
 
 			if b, err := p.expect(lexer.CP_UTF8); err != nil {
 				return state.Fail[*Parser](err)
@@ -120,73 +122,73 @@ func constantPool(p *Parser) state.Fn[*Parser] {
 				info.Value = string(b)
 			}
 
-			p.Class.ConstantPool[i] = info
+			p.data[0].DecompiledClass().ConstantPool[i] = info
 		case 3: // CONSTANT_Integer
-			info := data.CpIntegerInfo{}
+			info := &data.ConstantInteger{}
 
 			if err := p.expectDecode(lexer.CP_INT, &info.Value); err != nil {
 				return state.Fail[*Parser](err)
 			}
 
-			p.Class.ConstantPool[i] = info
+			p.data[0].DecompiledClass().ConstantPool[i] = info
 		case 7: // CONSTANT_Class
-			info := data.CpClassInfo{}
+			info := &data.ConstantClass{}
 
 			var cpIndex uint16
 			if err := p.expectDecode(lexer.CP_INDEX, &cpIndex); err != nil {
 				return state.Fail[*Parser](err)
 			}
 
-			info.Name = &p.Class.ConstantPool[cpIndex-1]
-			p.Class.ConstantPool[i] = info
+			info.Name = &p.data[0].DecompiledClass().ConstantPool[cpIndex-1]
+			p.data[0].DecompiledClass().ConstantPool[i] = info
 		case 9: // CONSTANT_Fieldref
-			info := data.CpFieldrefInfo{}
+			info := &data.ConstantFieldref{}
 
 			var cpIndex uint16
 			if err := p.expectDecode(lexer.CP_INDEX, &cpIndex); err != nil {
 				return state.Fail[*Parser](err)
 			}
 
-			info.Class = &p.Class.ConstantPool[cpIndex-1]
+			info.Class = &p.data[0].DecompiledClass().ConstantPool[cpIndex-1]
 
 			if err := p.expectDecode(lexer.CP_INDEX, &cpIndex); err != nil {
 				return state.Fail[*Parser](err)
 			}
 
-			info.NameAndType = &p.Class.ConstantPool[cpIndex-1]
-			p.Class.ConstantPool[i] = info
+			info.NameAndType = &p.data[0].DecompiledClass().ConstantPool[cpIndex-1]
+			p.data[0].DecompiledClass().ConstantPool[i] = info
 		case 10: // CONSTANT_Methodref
-			info := data.CpMethodrefInfo{}
+			info := &data.ConstantMethodref{}
 
 			var cpIndex uint16
 			if err := p.expectDecode(lexer.CP_INDEX, &cpIndex); err != nil {
 				return state.Fail[*Parser](err)
 			}
 
-			info.Class = &p.Class.ConstantPool[cpIndex-1]
+			info.Class = &p.data[0].DecompiledClass().ConstantPool[cpIndex-1]
 
 			if err := p.expectDecode(lexer.CP_INDEX, &cpIndex); err != nil {
 				return state.Fail[*Parser](err)
 			}
 
-			info.NameAndType = &p.Class.ConstantPool[cpIndex-1]
-			p.Class.ConstantPool[i] = info
+			info.NameAndType = &p.data[0].DecompiledClass().ConstantPool[cpIndex-1]
+			p.data[0].DecompiledClass().ConstantPool[i] = info
 		case 12: // CONSTANT_NameAndType
-			info := data.CpNameAndTypeInfo{}
+			info := &data.ConstantNameAndType{}
 
 			var cpIndex uint16
 			if err := p.expectDecode(lexer.CP_INDEX, &cpIndex); err != nil {
 				return state.Fail[*Parser](err)
 			}
 
-			info.Name = &p.Class.ConstantPool[cpIndex-1]
+			info.Name = &p.data[0].DecompiledClass().ConstantPool[cpIndex-1]
 
 			if err := p.expectDecode(lexer.CP_INDEX, &cpIndex); err != nil {
 				return state.Fail[*Parser](err)
 			}
 
-			info.Descriptor = &p.Class.ConstantPool[cpIndex-1]
-			p.Class.ConstantPool[i] = info
+			info.Descriptor = &p.data[0].DecompiledClass().ConstantPool[cpIndex-1]
+			p.data[0].DecompiledClass().ConstantPool[i] = info
 		default:
 			return state.Fail[*Parser](fmt.Errorf("unknown cp_info_tag: %d. See https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.4-140", int(tag)))
 		}
@@ -196,7 +198,7 @@ func constantPool(p *Parser) state.Fn[*Parser] {
 }
 
 func access(p *Parser) state.Fn[*Parser] {
-	if err := p.expectDecode(lexer.ACCESS_FLAGS, &p.Class.AccessFlags); err != nil {
+	if err := p.expectDecode(lexer.ACCESS_FLAGS, &p.data[0].DecompiledClass().AccessFlags); err != nil {
 		return state.Fail[*Parser](err)
 	}
 
@@ -209,7 +211,7 @@ func thisClass(p *Parser) state.Fn[*Parser] {
 		return state.Fail[*Parser](err)
 	}
 
-	p.Class.ThisClass = &p.Class.ConstantPool[cpIndex-1]
+	p.data[0].DecompiledClass().ThisClass = &p.data[0].DecompiledClass().ConstantPool[cpIndex-1]
 
 	return superClass
 }
@@ -221,7 +223,7 @@ func superClass(p *Parser) state.Fn[*Parser] {
 	}
 
 	if cpIndex != 0 {
-		p.Class.SuperClass = &p.Class.ConstantPool[cpIndex-1]
+		p.data[0].DecompiledClass().SuperClass = &p.data[0].DecompiledClass().ConstantPool[cpIndex-1]
 	}
 
 	return interfaces
@@ -254,13 +256,13 @@ func parseMember(p *Parser, m data.MemberType) (*data.MemberInfo, error) {
 		return nil, err
 	}
 
-	info.Name = &p.Class.ConstantPool[cpIndex-1]
+	info.Name = &p.data[0].DecompiledClass().ConstantPool[cpIndex-1]
 
 	if err := p.expectDecode(lexer.CP_INDEX, &cpIndex); err != nil {
 		return nil, err
 	}
 
-	info.Descriptor = &p.Class.ConstantPool[cpIndex-1]
+	info.Descriptor = &p.data[0].DecompiledClass().ConstantPool[cpIndex-1]
 
 	var n uint16
 	if err := p.expectDecode(lexer.ATTRIBUTES_COUNT, &n); err != nil {
@@ -284,14 +286,37 @@ func parseAttribute(p *Parser) (*data.AttributeHandle, error) {
 		return nil, err
 	}
 
-	name := &p.Class.ConstantPool[cpIndex-1]
+	name := p.data[0].DecompiledClass().ConstantPool[cpIndex-1].ConstantUtf8().Value
 
 	var begin int64
 	if err := p.expectDecode(lexer.ATTRIBUTE_BEGIN, &begin); err != nil {
 		return nil, err
 	}
 
-	return data.NewAttributeHandle((*name).Utf8Info().Value, begin), nil
+	switch name {
+	case "Code":
+		return &data.AttributeHandle{
+			AttributeTag: data.ATTR_CODE,
+			Begin:        begin,
+		}, nil
+	case "RuntimeVisibleAnnotations":
+		return &data.AttributeHandle{
+			AttributeTag: data.ATTR_RUNTIME_VISIBLE_ANNOTATIONS,
+			Begin:        begin,
+		}, nil
+	case "SourceFile":
+		return &data.AttributeHandle{
+			AttributeTag: data.ATTR_SOURCE_FILE,
+			Begin:        begin,
+		}, nil
+	case "InnerClasses":
+		return &data.AttributeHandle{
+			AttributeTag: data.ATTR_INNER_CLASSES,
+			Begin:        begin,
+		}, nil
+	default:
+		return nil, fmt.Errorf("unknown attribute name: %s", name)
+	}
 }
 
 func fields(p *Parser) state.Fn[*Parser] {
@@ -304,7 +329,7 @@ func fields(p *Parser) state.Fn[*Parser] {
 		if field, err := parseMember(p, data.FIELD); err != nil {
 			return state.Fail[*Parser](err)
 		} else {
-			p.Class.Fields = append(p.Class.Fields, *field)
+			p.data[0].DecompiledClass().Fields = append(p.data[0].DecompiledClass().Fields, *field)
 		}
 	}
 
@@ -321,7 +346,7 @@ func methods(p *Parser) state.Fn[*Parser] {
 		if method, err := parseMember(p, data.METHOD); err != nil {
 			return state.Fail[*Parser](err)
 		} else {
-			p.Class.Methods = append(p.Class.Methods, *method)
+			p.data[0].DecompiledClass().Methods = append(p.data[0].DecompiledClass().Methods, *method)
 		}
 	}
 
@@ -338,7 +363,7 @@ func attributes(p *Parser) state.Fn[*Parser] {
 		if attr, err := parseAttribute(p); err != nil {
 			return state.Fail[*Parser](err)
 		} else {
-			p.Class.Attributes = append(p.Class.Attributes, *attr)
+			p.data[0].DecompiledClass().Attributes = append(p.data[0].DecompiledClass().Attributes, *attr)
 		}
 	}
 
@@ -346,10 +371,11 @@ func attributes(p *Parser) state.Fn[*Parser] {
 }
 
 func end(p *Parser) state.Fn[*Parser] {
-	_, err := p.expect(lexer.EOF)
-	if err != nil {
+	if _, err := p.expect(lexer.EOF); err != nil {
 		return state.Fail[*Parser](err)
 	}
+
+	p.dataCh <- p.data[0]
 
 	return nil
 }

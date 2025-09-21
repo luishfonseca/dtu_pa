@@ -1,26 +1,28 @@
 package data
 
-import "fmt"
-
-type Class struct {
+type DecompiledClass struct {
 	Version      string
-	ConstantPool []CpInfo
+	ConstantPool []Data
 	AccessFlags  AccessFlags
-	ThisClass    *CpInfo
-	SuperClass   *CpInfo
+	ThisClass    *Data
+	SuperClass   *Data
 	Fields       []MemberInfo
 	Methods      []MemberInfo
 	Attributes   []AttributeHandle
+	baseData
 }
 
-func (c Class) String() string {
-	str := "Class {\n"
+func (DecompiledClass) Tag() Tag {
+	return DECOMPILED_CLASS
+}
+
+func (c *DecompiledClass) DecompiledClass() *DecompiledClass {
+	return c
+}
+
+func (c DecompiledClass) String() string {
+	str := "DecompiledClass {\n"
 	str += "  Version: " + c.Version + "\n"
-	str += "  ConstantPool: [\n"
-	for i, cp := range c.ConstantPool {
-		str += "    #" + fmt.Sprintf("%d", i+1) + " = " + cp.String() + "\n"
-	}
-	str += "  ]\n"
 	str += "  AccessFlags: " + c.AccessFlags.String() + "\n"
 	str += "  ThisClass: " + (*c.ThisClass).String() + "\n"
 	str += "  SuperClass: " + func() string {
