@@ -101,12 +101,7 @@ func waitReq(p *Parser) state.Fn[*Parser] {
 		if attr, ok := p.attributes[*req.AttributeHandle()]; ok {
 			p.dataCh <- attr
 		} else {
-			switch req.AttributeHandle().AttributeTag {
-			case data.ATTR_CODE:
-				return attributeCode
-			default:
-				return state.Fail[*Parser](fmt.Errorf("attribute tag unimplemented: %s", req.AttributeHandle().AttributeTag))
-			}
+			return attribute(*req.AttributeHandle())
 		}
 	case data.BYTECODE_HANDLE:
 		if bc, ok := p.codes[*req.BytecodeHandle()]; ok {
@@ -118,10 +113,6 @@ func waitReq(p *Parser) state.Fn[*Parser] {
 		return state.Fail[*Parser](fmt.Errorf("unexpected request tag: %s", req.Tag()))
 	}
 
-	return waitReq
-}
-
-func attributeCode(p *Parser) state.Fn[*Parser] {
 	return waitReq
 }
 
