@@ -11,7 +11,7 @@ type AttributeHandle struct {
 }
 
 func (AttributeHandle) Tag() Tag {
-	return ATTR_HANDLE
+	return ATTRIBUTE_HANDLE
 }
 
 func (a *AttributeHandle) AttributeHandle() *AttributeHandle {

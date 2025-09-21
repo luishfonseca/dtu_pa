@@ -20,8 +20,8 @@ type ConfigProvider interface {
 	GetClassFile() string
 }
 
-func New(cfg ConfigProvider, tokenCh chan<- Token) (*Lexer, error) {
-	input, err := os.Open(cfg.GetClassFile())
+func New(file string, tokenCh chan<- Token) (*Lexer, error) {
+	input, err := os.Open(file)
 	if err != nil {
 		return nil, err
 	}

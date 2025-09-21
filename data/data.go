@@ -7,8 +7,9 @@ type Tag int
 const (
 	UNKNOWN Tag = iota
 	DECOMPILED_CLASS
-	ATTR_HANDLE
-	CODE_HANDLE
+	BYTECODE
+	ATTRIBUTE_HANDLE
+	BYTECODE_HANDLE
 	CP_UTF8
 	CP_INTEGER
 	CP_CLASS
@@ -27,10 +28,12 @@ func (t Tag) String() string {
 		return "Unknown"
 	case DECOMPILED_CLASS:
 		return "DecompiledClass"
-	case ATTR_HANDLE:
+	case BYTECODE:
+		return "Bytecode"
+	case ATTRIBUTE_HANDLE:
 		return "AttributeHandle"
-	case CODE_HANDLE:
-		return "CodeHandle"
+	case BYTECODE_HANDLE:
+		return "BytecodeHandle"
 	case CP_UTF8:
 		return "ConstantUtf8"
 	case CP_INTEGER:
@@ -60,7 +63,7 @@ type Data interface {
 	Tag() Tag
 	DecompiledClass() *DecompiledClass
 	AttributeHandle() *AttributeHandle
-	CodeHandle() *CodeHandle
+	BytecodeHandle() *BytecodeHandle
 	ConstantUtf8() *ConstantUtf8
 	ConstantInteger() *ConstantInteger
 	ConstantClass() *ConstantClass
@@ -83,7 +86,7 @@ func msg(b *baseData, expected string) string {
 func (baseData) Tag() Tag                                     { return UNKNOWN }
 func (b *baseData) DecompiledClass() *DecompiledClass         { panic(msg(b, "DecompiledClass")) }
 func (b *baseData) AttributeHandle() *AttributeHandle         { panic(msg(b, "AttributeHandle")) }
-func (b *baseData) CodeHandle() *CodeHandle                   { panic(msg(b, "CodeHandle")) }
+func (b *baseData) BytecodeHandle() *BytecodeHandle           { panic(msg(b, "BytecodeHandle")) }
 func (b *baseData) ConstantUtf8() *ConstantUtf8               { panic(msg(b, "ConstantUtf8")) }
 func (b *baseData) ConstantInteger() *ConstantInteger         { panic(msg(b, "ConstantInteger")) }
 func (b *baseData) ConstantClass() *ConstantClass             { panic(msg(b, "ConstantClass")) }
@@ -98,4 +101,4 @@ func (b *baseData) AttributeRuntimeVisibleAnnotations() *AttributeRuntimeVisible
 func (b *baseData) AttributeInnerClasses() *AttributeInnerClasses {
 	panic(msg(b, "AttributeInnerClasses"))
 }
-func (baseData) String() string { return "<unknown>" }
+func (b baseData) String() string { return b.Tag().String() }

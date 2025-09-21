@@ -23,11 +23,11 @@ func (m MemberType) String() string {
 type MemberInfo struct {
 	MemberType  MemberType
 	AccessFlags AccessFlags
-	Name        *Data
-	Descriptor  *Data
+	Name        ConstantUtf8
+	Descriptor  ConstantUtf8
 	Attributes  []AttributeHandle
 }
 
 func (info MemberInfo) String() string {
-	return fmt.Sprintf("<%s: %s %s %v> -> %v", info.MemberType, *info.Name, *info.Descriptor, info.AccessFlags, info.Attributes)
+	return fmt.Sprintf("<%s: %s %s %v> -> %v", info.MemberType, info.Name, info.Descriptor, info.AccessFlags, info.Attributes)
 }

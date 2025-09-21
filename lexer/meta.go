@@ -41,14 +41,17 @@ func repeatUntil(element state.Fn[*Lexer], next state.Fn[*Lexer]) state.Fn[*Lexe
 
 // Captures n indexes pointing the constant_pool table and continues to next.
 func constantPoolIndices(l *Lexer, n int, next state.Fn[*Lexer]) state.Fn[*Lexer] {
-	return state.RepeatN(n, func() error {
-		if err := l.read(2); err != nil {
-			return err
+	return func(l *Lexer) state.Fn[*Lexer] {
+		for range n {
+			if err := l.read(2); err != nil {
+				return state.Fail[*Lexer](err)
+			}
+
+			l.emit(CP_INDEX)
 		}
 
-		l.emit(CP_INDEX)
-		return nil
-	}, next)
+		return next
+	}
 }
 
 // The value of the access_flags item is a mask of flags used to denote access permission to and properties of this field.

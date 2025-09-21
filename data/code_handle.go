@@ -4,20 +4,20 @@ import (
 	"fmt"
 )
 
-type CodeHandle struct {
-	Begin int64
-	End   int64
+type BytecodeHandle struct {
+	Begin  int64
+	Length uint32
 	baseData
 }
 
-func (CodeHandle) Tag() Tag {
-	return CODE_HANDLE
+func (BytecodeHandle) Tag() Tag {
+	return BYTECODE_HANDLE
 }
 
-func (c *CodeHandle) CodeHandle() *CodeHandle {
+func (c *BytecodeHandle) BytecodeHandle() *BytecodeHandle {
 	return c
 }
 
-func (c CodeHandle) String() string {
-	return fmt.Sprintf("<@ [%d.. %d] >", c.Begin, c.End)
+func (c BytecodeHandle) String() string {
+	return fmt.Sprintf("<@ [%d.. %d] >", c.Begin, c.Begin+int64(c.Length))
 }

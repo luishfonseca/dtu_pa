@@ -13,14 +13,3 @@ func Fail[T fallible](err error) Fn[T] {
 		return nil
 	}
 }
-
-func RepeatN[T fallible](n int, run func() error, next Fn[T]) Fn[T] {
-	return func(s T) Fn[T] {
-		for range n {
-			if err := run(); err != nil {
-				return Fail[T](err)
-			}
-		}
-		return next
-	}
-}
