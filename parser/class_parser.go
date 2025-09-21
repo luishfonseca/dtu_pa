@@ -32,7 +32,7 @@ func version(p *Parser) state.Fn[*Parser] {
 		return state.Fail[*Parser](err)
 	}
 
-	p.class.DecompiledClass().Version = fmt.Sprintf("%d.%d", M, m)
+	p.class.Version = fmt.Sprintf("%d.%d", M, m)
 
 	return constantPool
 }
@@ -44,7 +44,7 @@ func constantPool(p *Parser) state.Fn[*Parser] {
 	}
 
 	// The constant_pool table is indexed from 1 to constant_pool_count-1
-	p.class.DecompiledClass().ConstantPool = make([]data.Data, n-1)
+	p.class.ConstantPool = make([]data.Data, n-1)
 
 	for i := range n - 1 {
 		var tag uint8
@@ -62,7 +62,7 @@ func constantPool(p *Parser) state.Fn[*Parser] {
 				info.Value = string(b)
 			}
 
-			p.class.DecompiledClass().ConstantPool[i] = info
+			p.class.ConstantPool[i] = info
 		case 3: // CONSTANT_Integer
 			info := &data.ConstantInteger{}
 
@@ -70,7 +70,7 @@ func constantPool(p *Parser) state.Fn[*Parser] {
 				return state.Fail[*Parser](err)
 			}
 
-			p.class.DecompiledClass().ConstantPool[i] = info
+			p.class.ConstantPool[i] = info
 		case 7: // CONSTANT_Class
 			info := &data.ConstantClass{}
 
@@ -79,8 +79,8 @@ func constantPool(p *Parser) state.Fn[*Parser] {
 				return state.Fail[*Parser](err)
 			}
 
-			info.Name = &p.class.DecompiledClass().ConstantPool[cpIndex-1]
-			p.class.DecompiledClass().ConstantPool[i] = info
+			info.Name = &p.class.ConstantPool[cpIndex-1]
+			p.class.ConstantPool[i] = info
 		case 9: // CONSTANT_Fieldref
 			info := &data.ConstantFieldref{}
 
@@ -89,14 +89,14 @@ func constantPool(p *Parser) state.Fn[*Parser] {
 				return state.Fail[*Parser](err)
 			}
 
-			info.Class = &p.class.DecompiledClass().ConstantPool[cpIndex-1]
+			info.Class = &p.class.ConstantPool[cpIndex-1]
 
 			if err := p.expectDecode(lexer.CP_INDEX, &cpIndex); err != nil {
 				return state.Fail[*Parser](err)
 			}
 
-			info.NameAndType = &p.class.DecompiledClass().ConstantPool[cpIndex-1]
-			p.class.DecompiledClass().ConstantPool[i] = info
+			info.NameAndType = &p.class.ConstantPool[cpIndex-1]
+			p.class.ConstantPool[i] = info
 		case 10: // CONSTANT_Methodref
 			info := &data.ConstantMethodref{}
 
@@ -105,14 +105,14 @@ func constantPool(p *Parser) state.Fn[*Parser] {
 				return state.Fail[*Parser](err)
 			}
 
-			info.Class = &p.class.DecompiledClass().ConstantPool[cpIndex-1]
+			info.Class = &p.class.ConstantPool[cpIndex-1]
 
 			if err := p.expectDecode(lexer.CP_INDEX, &cpIndex); err != nil {
 				return state.Fail[*Parser](err)
 			}
 
-			info.NameAndType = &p.class.DecompiledClass().ConstantPool[cpIndex-1]
-			p.class.DecompiledClass().ConstantPool[i] = info
+			info.NameAndType = &p.class.ConstantPool[cpIndex-1]
+			p.class.ConstantPool[i] = info
 		case 12: // CONSTANT_NameAndType
 			info := &data.ConstantNameAndType{}
 
@@ -121,14 +121,14 @@ func constantPool(p *Parser) state.Fn[*Parser] {
 				return state.Fail[*Parser](err)
 			}
 
-			info.Name = &p.class.DecompiledClass().ConstantPool[cpIndex-1]
+			info.Name = &p.class.ConstantPool[cpIndex-1]
 
 			if err := p.expectDecode(lexer.CP_INDEX, &cpIndex); err != nil {
 				return state.Fail[*Parser](err)
 			}
 
-			info.Descriptor = &p.class.DecompiledClass().ConstantPool[cpIndex-1]
-			p.class.DecompiledClass().ConstantPool[i] = info
+			info.Descriptor = &p.class.ConstantPool[cpIndex-1]
+			p.class.ConstantPool[i] = info
 		default:
 			return state.Fail[*Parser](fmt.Errorf("unknown cp_info_tag: %d. See https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.4-140", int(tag)))
 		}
@@ -138,7 +138,7 @@ func constantPool(p *Parser) state.Fn[*Parser] {
 }
 
 func access(p *Parser) state.Fn[*Parser] {
-	if err := p.expectDecode(lexer.ACCESS_FLAGS, &p.class.DecompiledClass().AccessFlags); err != nil {
+	if err := p.expectDecode(lexer.ACCESS_FLAGS, &p.class.AccessFlags); err != nil {
 		return state.Fail[*Parser](err)
 	}
 
@@ -151,7 +151,7 @@ func thisClass(p *Parser) state.Fn[*Parser] {
 		return state.Fail[*Parser](err)
 	}
 
-	p.class.DecompiledClass().ThisClass = *p.class.DecompiledClass().ConstantPool[cpIndex-1].ConstantClass()
+	p.class.ThisClass = *p.class.ConstantPool[cpIndex-1].ConstantClass()
 
 	return superClass
 }
@@ -163,7 +163,7 @@ func superClass(p *Parser) state.Fn[*Parser] {
 	}
 
 	if cpIndex != 0 {
-		p.class.DecompiledClass().SuperClass = p.class.DecompiledClass().ConstantPool[cpIndex-1].ConstantClass()
+		p.class.SuperClass = p.class.ConstantPool[cpIndex-1].ConstantClass()
 	}
 
 	return interfaces
@@ -196,13 +196,13 @@ func parseMember(p *Parser, m data.MemberType) (*data.MemberInfo, error) {
 		return nil, err
 	}
 
-	info.Name = *p.class.DecompiledClass().ConstantPool[cpIndex-1].ConstantUtf8()
+	info.Name = *p.class.ConstantPool[cpIndex-1].ConstantUtf8()
 
 	if err := p.expectDecode(lexer.CP_INDEX, &cpIndex); err != nil {
 		return nil, err
 	}
 
-	info.Descriptor = *p.class.DecompiledClass().ConstantPool[cpIndex-1].ConstantUtf8()
+	info.Descriptor = *p.class.ConstantPool[cpIndex-1].ConstantUtf8()
 
 	var n uint16
 	if err := p.expectDecode(lexer.ATTRIBUTES_COUNT, &n); err != nil {
@@ -227,7 +227,7 @@ func parseAttribute(p *Parser) (*data.AttributeHandle, error) {
 		return nil, err
 	}
 
-	name := p.class.DecompiledClass().ConstantPool[cpIndex-1].ConstantUtf8().Value
+	name := p.class.ConstantPool[cpIndex-1].ConstantUtf8().Value
 
 	var begin int64
 	if err := p.expectDecode(lexer.ATTRIBUTE_BEGIN, &begin); err != nil {
@@ -264,7 +264,7 @@ func fields(p *Parser) state.Fn[*Parser] {
 		if field, err := parseMember(p, data.FIELD); err != nil {
 			return state.Fail[*Parser](err)
 		} else {
-			p.class.DecompiledClass().Fields = append(p.class.DecompiledClass().Fields, *field)
+			p.class.Fields = append(p.class.Fields, *field)
 		}
 	}
 
@@ -281,7 +281,7 @@ func methods(p *Parser) state.Fn[*Parser] {
 		if method, err := parseMember(p, data.METHOD); err != nil {
 			return state.Fail[*Parser](err)
 		} else {
-			p.class.DecompiledClass().Methods = append(p.class.DecompiledClass().Methods, *method)
+			p.class.Methods = append(p.class.Methods, *method)
 		}
 	}
 
@@ -294,12 +294,12 @@ func attributes(p *Parser) state.Fn[*Parser] {
 		return state.Fail[*Parser](err)
 	}
 
-	p.class.DecompiledClass().Attributes = make(map[data.Tag]*data.AttributeHandle)
+	p.class.Attributes = make(map[data.Tag]*data.AttributeHandle)
 	for range n {
 		if attr, err := parseAttribute(p); err != nil {
 			return state.Fail[*Parser](err)
 		} else {
-			p.class.DecompiledClass().Attributes[attr.AttributeTag] = attr
+			p.class.Attributes[attr.AttributeTag] = attr
 		}
 	}
 

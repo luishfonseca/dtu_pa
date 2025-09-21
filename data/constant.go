@@ -7,11 +7,11 @@ type ConstantUtf8 struct {
 	baseData
 }
 
-func (c ConstantUtf8) ConstantUtf8() *ConstantUtf8 {
-	return &c
+func (c *ConstantUtf8) ConstantUtf8() *ConstantUtf8 {
+	return c
 }
 
-func (ConstantUtf8) Tag() Tag {
+func (*ConstantUtf8) Tag() Tag {
 	return CP_UTF8
 }
 
@@ -24,11 +24,11 @@ type ConstantInteger struct {
 	baseData
 }
 
-func (c ConstantInteger) ConstantInteger() *ConstantInteger {
-	return &c
+func (c *ConstantInteger) ConstantInteger() *ConstantInteger {
+	return c
 }
 
-func (ConstantInteger) Tag() Tag {
+func (*ConstantInteger) Tag() Tag {
 	return CP_INTEGER
 }
 
@@ -41,11 +41,11 @@ type ConstantClass struct {
 	baseData
 }
 
-func (c ConstantClass) ConstantClass() *ConstantClass {
-	return &c
+func (c *ConstantClass) ConstantClass() *ConstantClass {
+	return c
 }
 
-func (ConstantClass) Tag() Tag {
+func (*ConstantClass) Tag() Tag {
 	return CP_CLASS
 }
 
@@ -59,11 +59,11 @@ type ConstantNameAndType struct {
 	baseData
 }
 
-func (c ConstantNameAndType) NameAndTypeInfo() *ConstantNameAndType {
-	return &c
+func (c *ConstantNameAndType) NameAndTypeInfo() *ConstantNameAndType {
+	return c
 }
 
-func (ConstantNameAndType) Tag() Tag {
+func (*ConstantNameAndType) Tag() Tag {
 	return CP_NAME_AND_TYPE
 }
 
@@ -77,11 +77,11 @@ type ConstantFieldref struct {
 	baseData
 }
 
-func (c ConstantFieldref) FieldrefInfo() *ConstantFieldref {
-	return &c
+func (c *ConstantFieldref) FieldrefInfo() *ConstantFieldref {
+	return c
 }
 
-func (ConstantFieldref) Tag() Tag {
+func (*ConstantFieldref) Tag() Tag {
 	return CP_FIELDREF
 }
 
@@ -99,7 +99,7 @@ func (c *ConstantMethodref) MethodrefInfo() *ConstantMethodref {
 	return c
 }
 
-func (ConstantMethodref) Tag() Tag {
+func (*ConstantMethodref) Tag() Tag {
 	return CP_METHODREF
 }
 

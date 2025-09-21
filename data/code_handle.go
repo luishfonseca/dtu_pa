@@ -10,7 +10,7 @@ type BytecodeHandle struct {
 	baseData
 }
 
-func (BytecodeHandle) Tag() Tag {
+func (*BytecodeHandle) Tag() Tag {
 	return BYTECODE_HANDLE
 }
 

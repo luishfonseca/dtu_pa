@@ -8,7 +8,7 @@ func (a *AttributeCode) AttributeCode() *AttributeCode {
 	return a
 }
 
-func (AttributeCode) Tag() Tag {
+func (*AttributeCode) Tag() Tag {
 	return ATTR_CODE
 }
 
@@ -20,7 +20,7 @@ func (a *AttributeSourceFile) AttributeSourceFile() *AttributeSourceFile {
 	return a
 }
 
-func (AttributeSourceFile) Tag() Tag {
+func (*AttributeSourceFile) Tag() Tag {
 	return ATTR_SOURCE_FILE
 }
 
@@ -32,7 +32,7 @@ func (a *AttributeRuntimeVisibleAnnotations) AttributeRuntimeVisibleAnnotations(
 	return a
 }
 
-func (AttributeRuntimeVisibleAnnotations) Tag() Tag {
+func (*AttributeRuntimeVisibleAnnotations) Tag() Tag {
 	return ATTR_RUNTIME_VISIBLE_ANNOTATIONS
 }
 
@@ -44,6 +44,6 @@ func (a *AttributeInnerClasses) AttributeInnerClasses() *AttributeInnerClasses {
 	return a
 }
 
-func (AttributeInnerClasses) Tag() Tag {
+func (*AttributeInnerClasses) Tag() Tag {
 	return ATTR_INNER_CLASSES
 }

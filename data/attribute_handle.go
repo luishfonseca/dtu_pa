@@ -10,7 +10,7 @@ type AttributeHandle struct {
 	baseData
 }
 
-func (AttributeHandle) Tag() Tag {
+func (*AttributeHandle) Tag() Tag {
 	return ATTRIBUTE_HANDLE
 }
 
