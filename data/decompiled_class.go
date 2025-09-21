@@ -10,7 +10,7 @@ type DecompiledClass struct {
 	SuperClass   *ConstantClass
 	Fields       []MemberInfo
 	Methods      []MemberInfo
-	Attributes   []AttributeHandle
+	Attributes   map[Tag]*AttributeHandle
 	baseData
 }
 
@@ -20,6 +20,15 @@ func (DecompiledClass) Tag() Tag {
 
 func (c *DecompiledClass) DecompiledClass() *DecompiledClass {
 	return c
+}
+
+func (c *DecompiledClass) Method(name string, descriptor string) *MemberInfo {
+	for _, method := range c.Methods {
+		if method.Name.Value == name && method.Descriptor.Value == descriptor {
+			return &method
+		}
+	}
+	return nil
 }
 
 func (c DecompiledClass) String() string {

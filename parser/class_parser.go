@@ -209,11 +209,12 @@ func parseMember(p *Parser, m data.MemberType) (*data.MemberInfo, error) {
 		return nil, err
 	}
 
+	info.Attributes = make(map[data.Tag]*data.AttributeHandle)
 	for range n {
 		if attr, err := parseAttribute(p); err != nil {
 			return nil, err
 		} else {
-			info.Attributes = append(info.Attributes, *attr)
+			info.Attributes[attr.AttributeTag] = attr
 		}
 	}
 
@@ -293,11 +294,12 @@ func attributes(p *Parser) state.Fn[*Parser] {
 		return state.Fail[*Parser](err)
 	}
 
+	p.class.DecompiledClass().Attributes = make(map[data.Tag]*data.AttributeHandle)
 	for range n {
 		if attr, err := parseAttribute(p); err != nil {
 			return state.Fail[*Parser](err)
 		} else {
-			p.class.DecompiledClass().Attributes = append(p.class.DecompiledClass().Attributes, *attr)
+			p.class.DecompiledClass().Attributes[attr.AttributeTag] = attr
 		}
 	}
 

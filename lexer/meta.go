@@ -69,11 +69,11 @@ func accessFlags(next state.Fn[*Lexer]) state.Fn[*Lexer] {
 
 func attributes(next state.Fn[*Lexer]) state.Fn[*Lexer] {
 	return func(l *Lexer) state.Fn[*Lexer] {
-		return repeatUntil(attribute(l, attributes(next)), next)
+		return repeatUntil(attributeHandle(l, attributes(next)), next)
 	}
 }
 
-func attribute(l *Lexer, next state.Fn[*Lexer]) state.Fn[*Lexer] {
+func attributeHandle(l *Lexer, next state.Fn[*Lexer]) state.Fn[*Lexer] {
 	return constantPoolIndices(l, 1, func(l *Lexer) state.Fn[*Lexer] {
 		if err := l.read(4); err != nil {
 			return state.Fail[*Lexer](err)

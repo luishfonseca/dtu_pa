@@ -35,7 +35,11 @@ func (a *analyser) Inspect() error {
 		}
 	}()
 
-	fmt.Print(<-dataCh)
+	class := (<-dataCh).DecompiledClass()
+
+	fmt.Print(class)
+
+	reqCh <- class.Method("arrayIsNull", "()V").Attributes[data.ATTR_CODE]
 
 	return nil
 }

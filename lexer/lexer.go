@@ -5,12 +5,14 @@ import (
 	"io"
 	"os"
 
+	"github.com/luishfonseca/dtu_pa/data"
 	"github.com/luishfonseca/dtu_pa/state"
 )
 
 type Lexer struct {
 	input   io.ReadSeekCloser
 	tokenCh chan<- Token
+	reqCh   <-chan data.Data
 	sc      stackedCounter
 	curr    []byte
 	err     error
@@ -20,7 +22,7 @@ type ConfigProvider interface {
 	GetClassFile() string
 }
 
-func New(file string, tokenCh chan<- Token) (*Lexer, error) {
+func New(file string, tokenCh chan<- Token, reqCh <-chan data.Data) (*Lexer, error) {
 	input, err := os.Open(file)
 	if err != nil {
 		return nil, err
@@ -29,6 +31,7 @@ func New(file string, tokenCh chan<- Token) (*Lexer, error) {
 	return &Lexer{
 		input:   input,
 		tokenCh: tokenCh,
+		reqCh:   reqCh,
 	}, nil
 }
 
@@ -37,9 +40,9 @@ func (l *Lexer) Fail(err error) {
 }
 
 func (l *Lexer) Run() error {
-	state.Run(l, classStart)
+	defer close(l.tokenCh)
 
-	close(l.tokenCh)
+	state.Run(l, classStart)
 
 	if l.err != nil {
 		return l.err
@@ -97,6 +100,26 @@ func classEnd(l *Lexer) state.Fn[*Lexer] {
 	return waitReq
 }
 
-func waitReq(l *Lexer) state.Fn[*Lexer] {
+func waitReq(p *Lexer) state.Fn[*Lexer] {
+	req, ok := <-p.reqCh
+	if !ok {
+		return done
+	}
+
+	switch req.Tag() {
+	case data.ATTRIBUTE_HANDLE:
+		return attribute
+	case data.BYTECODE_HANDLE:
+		return state.Fail[*Lexer](fmt.Errorf("bytecode handle unimplemented"))
+	default:
+		return state.Fail[*Lexer](fmt.Errorf("unexpected request tag: %s", req.Tag()))
+	}
+}
+
+func attribute(p *Lexer) state.Fn[*Lexer] {
+	return nil
+}
+
+func done(p *Lexer) state.Fn[*Lexer] {
 	return nil
 }

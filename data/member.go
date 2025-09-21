@@ -1,6 +1,10 @@
 package data
 
-import "fmt"
+import (
+	"fmt"
+	"maps"
+	"slices"
+)
 
 type MemberType int
 
@@ -25,9 +29,9 @@ type MemberInfo struct {
 	AccessFlags AccessFlags
 	Name        ConstantUtf8
 	Descriptor  ConstantUtf8
-	Attributes  []AttributeHandle
+	Attributes  map[Tag]*AttributeHandle
 }
 
-func (info MemberInfo) String() string {
-	return fmt.Sprintf("<%s: %s %s %v> -> %v", info.MemberType, info.Name, info.Descriptor, info.AccessFlags, info.Attributes)
+func (m MemberInfo) String() string {
+	return fmt.Sprintf("<%s: %s %s %v> -> %v", m.MemberType, m.Name, m.Descriptor, m.AccessFlags, slices.Collect(maps.Values(m.Attributes)))
 }

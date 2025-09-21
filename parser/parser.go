@@ -13,6 +13,7 @@ import (
 type Parser struct {
 	lexer      *lexer.Lexer
 	tokenCh    <-chan lexer.Token
+	tokenReqCh chan<- data.Data
 	dataCh     chan<- data.Data
 	reqCh      <-chan data.Data
 	attributes map[data.AttributeHandle]data.Data
@@ -23,17 +24,19 @@ type Parser struct {
 
 func New(file string, dataCh chan<- data.Data, reqCh <-chan data.Data) (*Parser, error) {
 	tokenCh := make(chan lexer.Token)
+	tokenReqCh := make(chan data.Data)
 
-	lexer, err := lexer.New(file, tokenCh)
+	lexer, err := lexer.New(file, tokenCh, tokenReqCh)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Parser{
-		lexer:   lexer,
-		tokenCh: tokenCh,
-		dataCh:  dataCh,
-		reqCh:   reqCh,
+		lexer:      lexer,
+		tokenCh:    tokenCh,
+		tokenReqCh: tokenReqCh,
+		dataCh:     dataCh,
+		reqCh:      reqCh,
 	}, nil
 }
 
@@ -43,6 +46,7 @@ func (p *Parser) Fail(err error) {
 
 func (p *Parser) Run() error {
 	defer close(p.dataCh)
+	defer close(p.tokenReqCh)
 
 	go func() {
 		if err := p.lexer.Run(); err != nil {
@@ -111,19 +115,25 @@ func waitReq(p *Parser) state.Fn[*Parser] {
 		if data, ok := p.attributes[*req.AttributeHandle()]; ok {
 			p.dataCh <- data
 		} else {
-			return nil
+			p.tokenReqCh <- req
+			return attribute
 		}
 	case data.BYTECODE_HANDLE:
 		if data, ok := p.codes[*req.BytecodeHandle()]; ok {
 			p.dataCh <- data
 		} else {
-			return nil
+			p.tokenReqCh <- req
+			return state.Fail[*Parser](fmt.Errorf("bytecode handle unimplemented"))
 		}
 	default:
 		return state.Fail[*Parser](fmt.Errorf("unexpected request tag: %s", req.Tag()))
 	}
 
 	return waitReq
+}
+
+func attribute(p *Parser) state.Fn[*Parser] {
+	return nil
 }
 
 func done(p *Parser) state.Fn[*Parser] {
