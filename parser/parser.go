@@ -133,7 +133,7 @@ func waitReq(p *Parser) state.Fn[*Parser] {
 }
 
 func attribute(p *Parser) state.Fn[*Parser] {
-	return nil
+	return waitReq
 }
 
 func done(p *Parser) state.Fn[*Parser] {

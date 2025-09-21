@@ -108,7 +108,12 @@ func waitReq(p *Lexer) state.Fn[*Lexer] {
 
 	switch req.Tag() {
 	case data.ATTRIBUTE_HANDLE:
-		return attribute
+		switch req.AttributeHandle().AttributeTag {
+		case data.ATTR_CODE:
+			return attributeCode
+		default:
+			return state.Fail[*Lexer](fmt.Errorf("unexpected attribute tag: %s", req.AttributeHandle().AttributeTag))
+		}
 	case data.BYTECODE_HANDLE:
 		return state.Fail[*Lexer](fmt.Errorf("bytecode handle unimplemented"))
 	default:
@@ -116,8 +121,8 @@ func waitReq(p *Lexer) state.Fn[*Lexer] {
 	}
 }
 
-func attribute(p *Lexer) state.Fn[*Lexer] {
-	return nil
+func attributeCode(p *Lexer) state.Fn[*Lexer] {
+	return waitReq
 }
 
 func done(p *Lexer) state.Fn[*Lexer] {
