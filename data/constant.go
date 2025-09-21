@@ -2,9 +2,31 @@ package data
 
 import "fmt"
 
+type Constant interface {
+	Tag() Tag
+	ConstantUtf8() *ConstantUtf8
+	ConstantInteger() *ConstantInteger
+	ConstantClass() *ConstantClass
+	ConstantNameAndType() *ConstantNameAndType
+	ConstantFieldref() *ConstantFieldref
+	ConstantMethodref() *ConstantMethodref
+	fmt.Stringer
+}
+
+type baseConstant struct{ Data }
+
+func (b *baseConstant) ConstantUtf8() *ConstantUtf8       { panic(msg(b, "ConstantUtf8")) }
+func (b *baseConstant) ConstantInteger() *ConstantInteger { panic(msg(b, "ConstantInteger")) }
+func (b *baseConstant) ConstantClass() *ConstantClass     { panic(msg(b, "ConstantClass")) }
+func (b *baseConstant) ConstantNameAndType() *ConstantNameAndType {
+	panic(msg(b, "ConstantNameAndType"))
+}
+func (b *baseConstant) ConstantFieldref() *ConstantFieldref   { panic(msg(b, "ConstantFieldref")) }
+func (b *baseConstant) ConstantMethodref() *ConstantMethodref { panic(msg(b, "ConstantMethodref")) }
+
 type ConstantUtf8 struct {
 	Value string
-	baseData
+	baseConstant
 }
 
 func (c *ConstantUtf8) ConstantUtf8() *ConstantUtf8 {
@@ -21,7 +43,7 @@ func (c ConstantUtf8) String() string {
 
 type ConstantInteger struct {
 	Value int32
-	baseData
+	baseConstant
 }
 
 func (c *ConstantInteger) ConstantInteger() *ConstantInteger {
@@ -38,7 +60,7 @@ func (c ConstantInteger) String() string {
 
 type ConstantClass struct {
 	Name *Data
-	baseData
+	baseConstant
 }
 
 func (c *ConstantClass) ConstantClass() *ConstantClass {
@@ -56,7 +78,7 @@ func (c ConstantClass) String() string {
 type ConstantNameAndType struct {
 	Name       *Data
 	Descriptor *Data
-	baseData
+	baseConstant
 }
 
 func (c *ConstantNameAndType) NameAndTypeInfo() *ConstantNameAndType {
@@ -74,7 +96,7 @@ func (c ConstantNameAndType) String() string {
 type ConstantFieldref struct {
 	Class       *Data
 	NameAndType *Data
-	baseData
+	baseConstant
 }
 
 func (c *ConstantFieldref) FieldrefInfo() *ConstantFieldref {
@@ -92,7 +114,7 @@ func (c ConstantFieldref) String() string {
 type ConstantMethodref struct {
 	Class       *Data
 	NameAndType *Data
-	baseData
+	baseConstant
 }
 
 func (c *ConstantMethodref) MethodrefInfo() *ConstantMethodref {

@@ -2,6 +2,40 @@ package data
 
 import "fmt"
 
+type Attribute interface {
+	Tag() Tag
+	AttributeCode() *AttributeCode
+	AttributeSourceFile() *AttributeSourceFile
+	AttributeRuntimeVisibleAnnotations() *AttributeRuntimeVisibleAnnotations
+	AttributeInnerClasses() *AttributeInnerClasses
+	AttributeLineNumberTable() *AttributeLineNumberTable
+	AttributeLocalVariableTable() *AttributeLocalVariableTable
+	AttributeStackMapTable() *AttributeStackMapTable
+	fmt.Stringer
+}
+
+type baseAttribute struct{ Data }
+
+func (b *baseAttribute) AttributeCode() *AttributeCode { panic(msg(b, "AttributeCode")) }
+func (b *baseAttribute) AttributeSourceFile() *AttributeSourceFile {
+	panic(msg(b, "AttributeSourceFile"))
+}
+func (b *baseAttribute) AttributeRuntimeVisibleAnnotations() *AttributeRuntimeVisibleAnnotations {
+	panic(msg(b, "AttributeRuntimeVisibleAnnotations"))
+}
+func (b *baseAttribute) AttributeInnerClasses() *AttributeInnerClasses {
+	panic(msg(b, "AttributeInnerClasses"))
+}
+func (b *baseAttribute) AttributeLineNumberTable() *AttributeLineNumberTable {
+	panic(msg(b, "AttributeLineNumberTable"))
+}
+func (b *baseAttribute) AttributeLocalVariableTable() *AttributeLocalVariableTable {
+	panic(msg(b, "AttributeLocalVariableTable"))
+}
+func (b *baseAttribute) AttributeStackMapTable() *AttributeStackMapTable {
+	panic(msg(b, "AttributeStackMapTable"))
+}
+
 type ExceptionTableEntry struct {
 	StartPC   uint16
 	EndPC     uint16
@@ -24,7 +58,7 @@ type AttributeCode struct {
 	CodeHandle     BytecodeHandle
 	ExceptionTable []ExceptionTableEntry
 	Attributes     []AttributeHandle
-	baseData
+	baseAttribute
 }
 
 func (a *AttributeCode) AttributeCode() *AttributeCode {
@@ -54,7 +88,7 @@ func (a AttributeCode) String() string {
 }
 
 type AttributeSourceFile struct {
-	baseData
+	baseAttribute
 }
 
 func (a *AttributeSourceFile) AttributeSourceFile() *AttributeSourceFile {
@@ -66,7 +100,7 @@ func (*AttributeSourceFile) Tag() Tag {
 }
 
 type AttributeRuntimeVisibleAnnotations struct {
-	baseData
+	baseAttribute
 }
 
 func (a *AttributeRuntimeVisibleAnnotations) AttributeRuntimeVisibleAnnotations() *AttributeRuntimeVisibleAnnotations {
@@ -78,7 +112,7 @@ func (*AttributeRuntimeVisibleAnnotations) Tag() Tag {
 }
 
 type AttributeInnerClasses struct {
-	baseData
+	baseAttribute
 }
 
 func (a *AttributeInnerClasses) AttributeInnerClasses() *AttributeInnerClasses {
@@ -90,7 +124,7 @@ func (*AttributeInnerClasses) Tag() Tag {
 }
 
 type AttributeLineNumberTable struct {
-	baseData
+	baseAttribute
 }
 
 func (a *AttributeLineNumberTable) AttributeLineNumberTable() *AttributeLineNumberTable {
@@ -102,7 +136,7 @@ func (*AttributeLineNumberTable) Tag() Tag {
 }
 
 type AttributeLocalVariableTable struct {
-	baseData
+	baseAttribute
 }
 
 func (a *AttributeLocalVariableTable) AttributeLocalVariableTable() *AttributeLocalVariableTable {
@@ -114,7 +148,7 @@ func (*AttributeLocalVariableTable) Tag() Tag {
 }
 
 type AttributeStackMapTable struct {
-	baseData
+	baseAttribute
 }
 
 func (a *AttributeStackMapTable) AttributeStackMapTable() *AttributeStackMapTable {

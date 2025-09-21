@@ -53,6 +53,16 @@ func (a *analyser) Inspect() error {
 
 		attr := d.AttributeCode()
 		fmt.Println(method.Name, method.Descriptor, "->", attr)
+
+		reqCh <- &attr.CodeHandle
+
+		d, ok = <-dataCh
+		if !ok {
+			return fmt.Errorf("error: no data received from parser")
+		}
+
+		fmt.Println(d.Bytecode())
+		fmt.Println()
 	}
 
 	return nil

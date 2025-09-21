@@ -109,7 +109,7 @@ func waitReq(p *Parser) state.Fn[*Parser] {
 		if bc, ok := p.codes[*req.BytecodeHandle()]; ok {
 			p.dataCh <- bc
 		} else {
-			return state.Fail[*Parser](fmt.Errorf("bytecode handle unimplemented"))
+			return bytecode(*req.BytecodeHandle())
 		}
 	default:
 		return state.Fail[*Parser](fmt.Errorf("unexpected request tag: %s", req.Tag()))

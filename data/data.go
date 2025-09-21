@@ -71,55 +71,24 @@ func (t Tag) String() string {
 type Data interface {
 	Tag() Tag
 	DecompiledClass() *DecompiledClass
-	AttributeHandle() *AttributeHandle
-	BytecodeHandle() *BytecodeHandle
-	ConstantUtf8() *ConstantUtf8
-	ConstantInteger() *ConstantInteger
-	ConstantClass() *ConstantClass
-	ConstantNameAndType() *ConstantNameAndType
-	ConstantFieldref() *ConstantFieldref
-	ConstantMethodref() *ConstantMethodref
-	AttributeCode() *AttributeCode
-	AttributeSourceFile() *AttributeSourceFile
-	AttributeRuntimeVisibleAnnotations() *AttributeRuntimeVisibleAnnotations
-	AttributeInnerClasses() *AttributeInnerClasses
-	AttributeLineNumberTable() *AttributeLineNumberTable
-	AttributeLocalVariableTable() *AttributeLocalVariableTable
-	AttributeStackMapTable() *AttributeStackMapTable
+	Bytecode() *Bytecode
+	Constant
+	Attribute
+	Handle
 	fmt.Stringer
 }
 
-type baseData struct{}
+type baseData struct {
+	baseAttribute
+	baseConstant
+	baseHandle
+}
 
-func msg(b *baseData, expected string) string {
+func msg(b Data, expected string) string {
 	return fmt.Sprintf("expected %s got %s", expected, b.Tag())
 }
 
-func (baseData) Tag() Tag                                     { return UNKNOWN }
-func (b *baseData) DecompiledClass() *DecompiledClass         { panic(msg(b, "DecompiledClass")) }
-func (b *baseData) AttributeHandle() *AttributeHandle         { panic(msg(b, "AttributeHandle")) }
-func (b *baseData) BytecodeHandle() *BytecodeHandle           { panic(msg(b, "BytecodeHandle")) }
-func (b *baseData) ConstantUtf8() *ConstantUtf8               { panic(msg(b, "ConstantUtf8")) }
-func (b *baseData) ConstantInteger() *ConstantInteger         { panic(msg(b, "ConstantInteger")) }
-func (b *baseData) ConstantClass() *ConstantClass             { panic(msg(b, "ConstantClass")) }
-func (b *baseData) ConstantNameAndType() *ConstantNameAndType { panic(msg(b, "ConstantNameAndType")) }
-func (b *baseData) ConstantFieldref() *ConstantFieldref       { panic(msg(b, "ConstantFieldref")) }
-func (b *baseData) ConstantMethodref() *ConstantMethodref     { panic(msg(b, "ConstantMethodref")) }
-func (b *baseData) AttributeCode() *AttributeCode             { panic(msg(b, "AttributeCode")) }
-func (b *baseData) AttributeSourceFile() *AttributeSourceFile { panic(msg(b, "AttributeSourceFile")) }
-func (b *baseData) AttributeRuntimeVisibleAnnotations() *AttributeRuntimeVisibleAnnotations {
-	panic(msg(b, "AttributeRuntimeVisibleAnnotations"))
-}
-func (b *baseData) AttributeInnerClasses() *AttributeInnerClasses {
-	panic(msg(b, "AttributeInnerClasses"))
-}
-func (b *baseData) AttributeLineNumberTable() *AttributeLineNumberTable {
-	panic(msg(b, "AttributeLineNumberTable"))
-}
-func (b *baseData) AttributeLocalVariableTable() *AttributeLocalVariableTable {
-	panic(msg(b, "AttributeLocalVariableTable"))
-}
-func (b *baseData) AttributeStackMapTable() *AttributeStackMapTable {
-	panic(msg(b, "AttributeStackMapTable"))
-}
-func (b baseData) String() string { return b.Tag().String() }
+func (baseData) Tag() Tag                             { return UNKNOWN }
+func (b *baseData) DecompiledClass() *DecompiledClass { panic(msg(b, "DecompiledClass")) }
+func (b *baseData) Bytecode() *Bytecode               { panic(msg(b, "Bytecode")) }
+func (b baseData) String() string                     { return b.Tag().String() }
