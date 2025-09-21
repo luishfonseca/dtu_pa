@@ -2,14 +2,14 @@ package parser
 
 import (
 	"fmt"
+	"io"
 
 	"github.com/luishfonseca/dtu_pa/data"
-	"github.com/luishfonseca/dtu_pa/lexer"
 	"github.com/luishfonseca/dtu_pa/state"
 )
 
 func magic(p *Parser) state.Fn[*Parser] {
-	b, err := p.expect(lexer.MAGIC)
+	b, err := p.read(4)
 	if err != nil {
 		return state.Fail[*Parser](err)
 	}
@@ -24,11 +24,11 @@ func magic(p *Parser) state.Fn[*Parser] {
 func version(p *Parser) state.Fn[*Parser] {
 	var m, M uint16
 
-	if err := p.expectDecode(lexer.MINOR_VERSION, &m); err != nil {
+	if err := p.readDecode(&m); err != nil {
 		return state.Fail[*Parser](err)
 	}
 
-	if err := p.expectDecode(lexer.MAJOR_VERSION, &M); err != nil {
+	if err := p.readDecode(&M); err != nil {
 		return state.Fail[*Parser](err)
 	}
 
@@ -39,7 +39,7 @@ func version(p *Parser) state.Fn[*Parser] {
 
 func constantPool(p *Parser) state.Fn[*Parser] {
 	var n uint16
-	if err := p.expectDecode(lexer.CP_COUNT, &n); err != nil {
+	if err := p.readDecode(&n); err != nil {
 		return state.Fail[*Parser](err)
 	}
 
@@ -48,7 +48,7 @@ func constantPool(p *Parser) state.Fn[*Parser] {
 
 	for i := range n - 1 {
 		var tag uint8
-		if err := p.expectDecode(lexer.CP_INFO_TAG, &tag); err != nil {
+		if err := p.readDecode(&tag); err != nil {
 			return state.Fail[*Parser](err)
 		}
 
@@ -56,7 +56,12 @@ func constantPool(p *Parser) state.Fn[*Parser] {
 		case 1: // CONSTANT_Utf8
 			info := &data.ConstantUtf8{}
 
-			if b, err := p.expect(lexer.CP_UTF8); err != nil {
+			var n uint16
+			if err := p.readDecode(&n); err != nil {
+				return state.Fail[*Parser](err)
+			}
+
+			if b, err := p.read(int(n)); err != nil {
 				return state.Fail[*Parser](err)
 			} else {
 				info.Value = string(b)
@@ -66,7 +71,7 @@ func constantPool(p *Parser) state.Fn[*Parser] {
 		case 3: // CONSTANT_Integer
 			info := &data.ConstantInteger{}
 
-			if err := p.expectDecode(lexer.CP_INT, &info.Value); err != nil {
+			if err := p.readDecode(&info.Value); err != nil {
 				return state.Fail[*Parser](err)
 			}
 
@@ -75,7 +80,7 @@ func constantPool(p *Parser) state.Fn[*Parser] {
 			info := &data.ConstantClass{}
 
 			var cpIndex uint16
-			if err := p.expectDecode(lexer.CP_INDEX, &cpIndex); err != nil {
+			if err := p.readDecode(&cpIndex); err != nil {
 				return state.Fail[*Parser](err)
 			}
 
@@ -85,13 +90,13 @@ func constantPool(p *Parser) state.Fn[*Parser] {
 			info := &data.ConstantFieldref{}
 
 			var cpIndex uint16
-			if err := p.expectDecode(lexer.CP_INDEX, &cpIndex); err != nil {
+			if err := p.readDecode(&cpIndex); err != nil {
 				return state.Fail[*Parser](err)
 			}
 
 			info.Class = &p.class.ConstantPool[cpIndex-1]
 
-			if err := p.expectDecode(lexer.CP_INDEX, &cpIndex); err != nil {
+			if err := p.readDecode(&cpIndex); err != nil {
 				return state.Fail[*Parser](err)
 			}
 
@@ -101,13 +106,13 @@ func constantPool(p *Parser) state.Fn[*Parser] {
 			info := &data.ConstantMethodref{}
 
 			var cpIndex uint16
-			if err := p.expectDecode(lexer.CP_INDEX, &cpIndex); err != nil {
+			if err := p.readDecode(&cpIndex); err != nil {
 				return state.Fail[*Parser](err)
 			}
 
 			info.Class = &p.class.ConstantPool[cpIndex-1]
 
-			if err := p.expectDecode(lexer.CP_INDEX, &cpIndex); err != nil {
+			if err := p.readDecode(&cpIndex); err != nil {
 				return state.Fail[*Parser](err)
 			}
 
@@ -117,13 +122,13 @@ func constantPool(p *Parser) state.Fn[*Parser] {
 			info := &data.ConstantNameAndType{}
 
 			var cpIndex uint16
-			if err := p.expectDecode(lexer.CP_INDEX, &cpIndex); err != nil {
+			if err := p.readDecode(&cpIndex); err != nil {
 				return state.Fail[*Parser](err)
 			}
 
 			info.Name = &p.class.ConstantPool[cpIndex-1]
 
-			if err := p.expectDecode(lexer.CP_INDEX, &cpIndex); err != nil {
+			if err := p.readDecode(&cpIndex); err != nil {
 				return state.Fail[*Parser](err)
 			}
 
@@ -138,7 +143,7 @@ func constantPool(p *Parser) state.Fn[*Parser] {
 }
 
 func access(p *Parser) state.Fn[*Parser] {
-	if err := p.expectDecode(lexer.ACCESS_FLAGS, &p.class.AccessFlags); err != nil {
+	if err := p.readDecode(&p.class.AccessFlags); err != nil {
 		return state.Fail[*Parser](err)
 	}
 
@@ -147,7 +152,7 @@ func access(p *Parser) state.Fn[*Parser] {
 
 func thisClass(p *Parser) state.Fn[*Parser] {
 	var cpIndex uint16
-	if err := p.expectDecode(lexer.CP_INDEX, &cpIndex); err != nil {
+	if err := p.readDecode(&cpIndex); err != nil {
 		return state.Fail[*Parser](err)
 	}
 
@@ -158,7 +163,7 @@ func thisClass(p *Parser) state.Fn[*Parser] {
 
 func superClass(p *Parser) state.Fn[*Parser] {
 	var cpIndex uint16
-	if err := p.expectDecode(lexer.CP_NULLABLE_INDEX, &cpIndex); err != nil {
+	if err := p.readDecode(&cpIndex); err != nil {
 		return state.Fail[*Parser](err)
 	}
 
@@ -171,7 +176,7 @@ func superClass(p *Parser) state.Fn[*Parser] {
 
 func interfaces(p *Parser) state.Fn[*Parser] {
 	var n uint16
-	if err := p.expectDecode(lexer.INTERFACES_COUNT, &n); err != nil {
+	if err := p.readDecode(&n); err != nil {
 		return state.Fail[*Parser](err)
 	}
 
@@ -187,25 +192,25 @@ func parseMember(p *Parser, m data.MemberType) (*data.MemberInfo, error) {
 		MemberType: m,
 	}
 
-	if err := p.expectDecode(lexer.ACCESS_FLAGS, &info.AccessFlags); err != nil {
+	if err := p.readDecode(&info.AccessFlags); err != nil {
 		return nil, err
 	}
 
 	var cpIndex uint16
-	if err := p.expectDecode(lexer.CP_INDEX, &cpIndex); err != nil {
+	if err := p.readDecode(&cpIndex); err != nil {
 		return nil, err
 	}
 
 	info.Name = *p.class.ConstantPool[cpIndex-1].ConstantUtf8()
 
-	if err := p.expectDecode(lexer.CP_INDEX, &cpIndex); err != nil {
+	if err := p.readDecode(&cpIndex); err != nil {
 		return nil, err
 	}
 
 	info.Descriptor = *p.class.ConstantPool[cpIndex-1].ConstantUtf8()
 
 	var n uint16
-	if err := p.expectDecode(lexer.ATTRIBUTES_COUNT, &n); err != nil {
+	if err := p.readDecode(&n); err != nil {
 		return nil, err
 	}
 
@@ -223,16 +228,11 @@ func parseMember(p *Parser, m data.MemberType) (*data.MemberInfo, error) {
 
 func parseAttribute(p *Parser) (*data.AttributeHandle, error) {
 	var cpIndex uint16
-	if err := p.expectDecode(lexer.CP_INDEX, &cpIndex); err != nil {
+	if err := p.readDecode(&cpIndex); err != nil {
 		return nil, err
 	}
 
 	name := p.class.ConstantPool[cpIndex-1].ConstantUtf8().Value
-
-	var begin int64
-	if err := p.expectDecode(lexer.ATTRIBUTE_BEGIN, &begin); err != nil {
-		return nil, err
-	}
 
 	var tag data.Tag
 	switch name {
@@ -248,6 +248,21 @@ func parseAttribute(p *Parser) (*data.AttributeHandle, error) {
 		return nil, fmt.Errorf("unknown attribute name: %s", name)
 	}
 
+	var size uint32
+	if err := p.readDecode(&size); err != nil {
+		return nil, err
+	}
+
+	begin, err := p.input.Seek(0, io.SeekCurrent) // Mark current position
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = p.input.Seek(int64(size), io.SeekCurrent) // Skip attribute content
+	if err != nil {
+		return nil, err
+	}
+
 	return &data.AttributeHandle{
 		AttributeTag: tag,
 		Begin:        begin,
@@ -256,7 +271,7 @@ func parseAttribute(p *Parser) (*data.AttributeHandle, error) {
 
 func fields(p *Parser) state.Fn[*Parser] {
 	var n uint16
-	if err := p.expectDecode(lexer.FIELDS_COUNT, &n); err != nil {
+	if err := p.readDecode(&n); err != nil {
 		return state.Fail[*Parser](err)
 	}
 
@@ -273,7 +288,7 @@ func fields(p *Parser) state.Fn[*Parser] {
 
 func methods(p *Parser) state.Fn[*Parser] {
 	var n uint16
-	if err := p.expectDecode(lexer.METHODS_COUNT, &n); err != nil {
+	if err := p.readDecode(&n); err != nil {
 		return state.Fail[*Parser](err)
 	}
 
@@ -290,7 +305,7 @@ func methods(p *Parser) state.Fn[*Parser] {
 
 func attributes(p *Parser) state.Fn[*Parser] {
 	var n uint16
-	if err := p.expectDecode(lexer.ATTRIBUTES_COUNT, &n); err != nil {
+	if err := p.readDecode(&n); err != nil {
 		return state.Fail[*Parser](err)
 	}
 

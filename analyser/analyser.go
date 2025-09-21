@@ -39,7 +39,7 @@ func (a *analyser) Inspect() error {
 
 	fmt.Print(class)
 
-	reqCh <- class.Method("arrayIsNull", "()V").Attributes[data.ATTR_CODE]
+	// reqCh <- class.Method("arrayIsNull", "()V").Attributes[data.ATTR_CODE]
 
 	return nil
 }

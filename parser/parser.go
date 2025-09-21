@@ -1,19 +1,17 @@
 package parser
 
 import (
+	"encoding/binary"
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/luishfonseca/dtu_pa/data"
-	"github.com/luishfonseca/dtu_pa/lexer"
 	"github.com/luishfonseca/dtu_pa/state"
-	"github.com/luishfonseca/dtu_pa/util"
 )
 
 type Parser struct {
-	lexer      *lexer.Lexer
-	tokenCh    <-chan lexer.Token
-	tokenReqCh chan<- data.Data
+	input      io.ReadSeekCloser
 	dataCh     chan<- data.Data
 	reqCh      <-chan data.Data
 	attributes map[data.AttributeHandle]data.Data
@@ -23,21 +21,42 @@ type Parser struct {
 }
 
 func New(file string, dataCh chan<- data.Data, reqCh <-chan data.Data) (*Parser, error) {
-	tokenCh := make(chan lexer.Token)
-	tokenReqCh := make(chan data.Data)
-
-	lexer, err := lexer.New(file, tokenCh, tokenReqCh)
+	input, err := os.Open(file)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Parser{
-		lexer:      lexer,
-		tokenCh:    tokenCh,
-		tokenReqCh: tokenReqCh,
-		dataCh:     dataCh,
-		reqCh:      reqCh,
+		input:  input,
+		dataCh: dataCh,
+		reqCh:  reqCh,
 	}, nil
+}
+
+func (p *Parser) read(n int) ([]byte, error) {
+	token := make([]byte, n)
+	if _, err := io.ReadFull(p.input, token); err != nil {
+		return nil, err
+	}
+
+	return token, nil
+}
+
+func (p *Parser) readDecode(v any) error {
+	n := binary.Size(v)
+
+	b, err := p.read(n)
+	if err != nil {
+		return err
+	}
+
+	if nrd, err := binary.Decode(b, binary.BigEndian, v); err != nil {
+		return err
+	} else if nrd != n {
+		return fmt.Errorf("binary decode read %d bytes, expected %d", nrd, n)
+	}
+
+	return nil
 }
 
 func (p *Parser) Fail(err error) {
@@ -46,13 +65,6 @@ func (p *Parser) Fail(err error) {
 
 func (p *Parser) Run() error {
 	defer close(p.dataCh)
-	defer close(p.tokenReqCh)
-
-	go func() {
-		if err := p.lexer.Run(); err != nil {
-			fmt.Fprintf(os.Stderr, "error: lexer: %v\n", err)
-		}
-	}()
 
 	p.class = &data.DecompiledClass{}
 	state.Run(p, classStart)
@@ -64,39 +76,13 @@ func (p *Parser) Run() error {
 	return nil
 }
 
-func (p *Parser) expect(t lexer.TokenType) ([]byte, error) {
-	token, ok := <-p.tokenCh
-	if !ok {
-		return nil, fmt.Errorf("unexpected end of input, expected token type %s", t)
-	}
-
-	if token.Type != t {
-		return nil, fmt.Errorf("unexpected token type %s, expected %s", token.Type, t)
-	}
-
-	return token.Bytes, nil
-}
-
-func (p *Parser) expectDecode(t lexer.TokenType, v any) error {
-	b, err := p.expect(t)
-	if err != nil {
-		return err
-	}
-
-	if err := util.Decode(b, v); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func classStart(p *Parser) state.Fn[*Parser] {
 	return magic
 }
 
 func classEnd(p *Parser) state.Fn[*Parser] {
-	if _, err := p.expect(lexer.EOF); err != nil {
-		return state.Fail[*Parser](err)
+	if _, err := p.read(1); err != io.EOF {
+		return state.Fail[*Parser](fmt.Errorf("expected EOF, got more data"))
 	}
 
 	p.dataCh <- p.class
@@ -112,17 +98,20 @@ func waitReq(p *Parser) state.Fn[*Parser] {
 
 	switch req.Tag() {
 	case data.ATTRIBUTE_HANDLE:
-		if data, ok := p.attributes[*req.AttributeHandle()]; ok {
-			p.dataCh <- data
+		if attr, ok := p.attributes[*req.AttributeHandle()]; ok {
+			p.dataCh <- attr
 		} else {
-			p.tokenReqCh <- req
-			return attribute
+			switch req.AttributeHandle().AttributeTag {
+			case data.ATTR_CODE:
+				return attributeCode
+			default:
+				return state.Fail[*Parser](fmt.Errorf("attribute tag unimplemented: %s", req.AttributeHandle().AttributeTag))
+			}
 		}
 	case data.BYTECODE_HANDLE:
-		if data, ok := p.codes[*req.BytecodeHandle()]; ok {
-			p.dataCh <- data
+		if bc, ok := p.codes[*req.BytecodeHandle()]; ok {
+			p.dataCh <- bc
 		} else {
-			p.tokenReqCh <- req
 			return state.Fail[*Parser](fmt.Errorf("bytecode handle unimplemented"))
 		}
 	default:
@@ -132,20 +121,10 @@ func waitReq(p *Parser) state.Fn[*Parser] {
 	return waitReq
 }
 
-func attribute(p *Parser) state.Fn[*Parser] {
+func attributeCode(p *Parser) state.Fn[*Parser] {
 	return waitReq
 }
 
 func done(p *Parser) state.Fn[*Parser] {
-	lexerDone := true
-	for token, ok := <-p.tokenCh; ok; token, ok = <-p.tokenCh {
-		lexerDone = false
-		fmt.Fprintf(os.Stderr, "warning: unprocessed token: %s\n", token.Type)
-	}
-
-	if !lexerDone {
-		return state.Fail[*Parser](fmt.Errorf("stopped before lexer was done"))
-	}
-
 	return nil
 }

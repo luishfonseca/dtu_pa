@@ -34,11 +34,11 @@ func (c *DecompiledClass) Method(name string, descriptor string) *MemberInfo {
 func (c DecompiledClass) String() string {
 	str := "DecompiledClass {\n"
 	str += fmt.Sprintln("  Version:", c.Version)
-	// str += "  ConstantPool: [\n"
-	// for i, constant := range c.ConstantPool {
-	// 	str += fmt.Sprintf("    %2d: %s\n", i+1, constant)
-	// }
-	// str += "  ]\n"
+	str += "  ConstantPool: [\n"
+	for i, constant := range c.ConstantPool {
+		str += fmt.Sprintf("    %2d: %s\n", i+1, constant)
+	}
+	str += "  ]\n"
 	str += fmt.Sprintln("  AccessFlags:", c.AccessFlags)
 	str += fmt.Sprintln("  ThisClass:", c.ThisClass)
 	if c.SuperClass != nil {
