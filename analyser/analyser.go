@@ -35,11 +35,25 @@ func (a *analyser) Inspect() error {
 		}
 	}()
 
-	class := (<-dataCh).DecompiledClass()
+	d, ok := <-dataCh
+	if !ok {
+		return fmt.Errorf("error: no data received from parser")
+	}
 
-	fmt.Print(class)
+	class := d.DecompiledClass()
+	fmt.Println(class)
 
-	reqCh <- class.Method("arrayIsNull", "()V").Attributes[data.ATTR_CODE]
+	for _, method := range class.Methods {
+		reqCh <- method.Attributes[data.ATTR_CODE]
+
+		d, ok = <-dataCh
+		if !ok {
+			return fmt.Errorf("error: no data received from parser")
+		}
+
+		attr := d.AttributeCode()
+		fmt.Println(method.Name, method.Descriptor, "->", attr)
+	}
 
 	return nil
 }

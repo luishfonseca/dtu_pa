@@ -27,9 +27,11 @@ func New(file string, dataCh chan<- data.Data, reqCh <-chan data.Data) (*Parser,
 	}
 
 	return &Parser{
-		input:  input,
-		dataCh: dataCh,
-		reqCh:  reqCh,
+		input:      input,
+		dataCh:     dataCh,
+		reqCh:      reqCh,
+		attributes: make(map[data.AttributeHandle]data.Data),
+		codes:      make(map[data.BytecodeHandle]*data.Bytecode),
 	}, nil
 }
 

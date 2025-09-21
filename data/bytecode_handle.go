@@ -19,5 +19,5 @@ func (c *BytecodeHandle) BytecodeHandle() *BytecodeHandle {
 }
 
 func (c BytecodeHandle) String() string {
-	return fmt.Sprintf("<@ [%d.. %d] >", c.Begin, c.Begin+int64(c.Length))
+	return fmt.Sprintf("@[%d.. %d]", c.Begin, c.Begin+int64(c.Length))
 }

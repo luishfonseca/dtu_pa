@@ -20,6 +20,9 @@ const (
 	ATTR_SOURCE_FILE
 	ATTR_RUNTIME_VISIBLE_ANNOTATIONS
 	ATTR_INNER_CLASSES
+	ATTR_LINE_NUMBER_TABLE
+	ATTR_LOCAL_VARIABLE_TABLE
+	ATTR_STACK_MAP_TABLE
 )
 
 func (t Tag) String() string {
@@ -54,6 +57,12 @@ func (t Tag) String() string {
 		return "AttributeRuntimeVisibleAnnotations"
 	case ATTR_INNER_CLASSES:
 		return "AttributeInnerClasses"
+	case ATTR_LINE_NUMBER_TABLE:
+		return "AttributeLineNumberTable"
+	case ATTR_LOCAL_VARIABLE_TABLE:
+		return "AttributeLocalVariableTable"
+	case ATTR_STACK_MAP_TABLE:
+		return "AttributeStackMapTable"
 	default:
 		return fmt.Sprintf("Tag(%d)", int(t))
 	}
@@ -74,6 +83,9 @@ type Data interface {
 	AttributeSourceFile() *AttributeSourceFile
 	AttributeRuntimeVisibleAnnotations() *AttributeRuntimeVisibleAnnotations
 	AttributeInnerClasses() *AttributeInnerClasses
+	AttributeLineNumberTable() *AttributeLineNumberTable
+	AttributeLocalVariableTable() *AttributeLocalVariableTable
+	AttributeStackMapTable() *AttributeStackMapTable
 	fmt.Stringer
 }
 
@@ -100,5 +112,14 @@ func (b *baseData) AttributeRuntimeVisibleAnnotations() *AttributeRuntimeVisible
 }
 func (b *baseData) AttributeInnerClasses() *AttributeInnerClasses {
 	panic(msg(b, "AttributeInnerClasses"))
+}
+func (b *baseData) AttributeLineNumberTable() *AttributeLineNumberTable {
+	panic(msg(b, "AttributeLineNumberTable"))
+}
+func (b *baseData) AttributeLocalVariableTable() *AttributeLocalVariableTable {
+	panic(msg(b, "AttributeLocalVariableTable"))
+}
+func (b *baseData) AttributeStackMapTable() *AttributeStackMapTable {
+	panic(msg(b, "AttributeStackMapTable"))
 }
 func (b baseData) String() string { return b.Tag().String() }

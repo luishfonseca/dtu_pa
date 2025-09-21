@@ -58,7 +58,7 @@ func (c DecompiledClass) String() string {
 	for _, attr := range c.Attributes {
 		str += fmt.Sprintln("   ", attr)
 	}
-	str += "  ]\n}\n"
+	str += "  ]\n}"
 
 	return str
 }
