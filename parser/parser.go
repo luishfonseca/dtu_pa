@@ -16,7 +16,7 @@ type Parser struct {
 	reqCh      <-chan data.Data
 	attributes map[data.AttributeHandle]data.Data
 	codes      map[data.BytecodeHandle]*data.Bytecode
-	class      *data.DecompiledClass
+	class      *data.Class
 	err        error
 }
 
@@ -68,7 +68,7 @@ func (p *Parser) Fail(err error) {
 func (p *Parser) Run() error {
 	defer close(p.dataCh)
 
-	p.class = &data.DecompiledClass{}
+	p.class = &data.Class{}
 	state.Run(p, classStart)
 
 	if p.err != nil {

@@ -40,7 +40,7 @@ func (a *analyser) Inspect() error {
 		return fmt.Errorf("error: no data received from parser")
 	}
 
-	class := d.DecompiledClass()
+	class := d.Class()
 	fmt.Println(class)
 
 	for _, method := range class.Methods {

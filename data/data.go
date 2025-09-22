@@ -6,7 +6,7 @@ type Tag int
 
 const (
 	UNKNOWN Tag = iota
-	DECOMPILED_CLASS
+	CLASS
 	BYTECODE
 	ATTRIBUTE_HANDLE
 	BYTECODE_HANDLE
@@ -29,8 +29,8 @@ func (t Tag) String() string {
 	switch t {
 	case UNKNOWN:
 		return "Unknown"
-	case DECOMPILED_CLASS:
-		return "DecompiledClass"
+	case CLASS:
+		return "Class"
 	case BYTECODE:
 		return "Bytecode"
 	case ATTRIBUTE_HANDLE:
@@ -70,25 +70,35 @@ func (t Tag) String() string {
 
 type Data interface {
 	Tag() Tag
-	DecompiledClass() *DecompiledClass
-	Bytecode() *Bytecode
-	Constant
-	Attribute
-	Handle
 	fmt.Stringer
+
+	Class() *Class
+	Bytecode() *Bytecode
+
+	AttributeHandle() *AttributeHandle
+	BytecodeHandle() *BytecodeHandle
+
+	ConstantUtf8() *ConstantUtf8
+	ConstantInteger() *ConstantInteger
+	ConstantClass() *ConstantClass
+	ConstantNameAndType() *ConstantNameAndType
+	ConstantFieldref() *ConstantFieldref
+	ConstantMethodref() *ConstantMethodref
+
+	AttributeCode() *AttributeCode
+	AttributeSourceFile() *AttributeSourceFile
+	AttributeRuntimeVisibleAnnotations() *AttributeRuntimeVisibleAnnotations
+	AttributeInnerClasses() *AttributeInnerClasses
+	AttributeLineNumberTable() *AttributeLineNumberTable
+	AttributeLocalVariableTable() *AttributeLocalVariableTable
+	AttributeStackMapTable() *AttributeStackMapTable
 }
 
-type baseData struct {
-	baseAttribute
-	baseConstant
-	baseHandle
-}
+type baseData struct{}
 
 func msg(b Data, expected string) string {
 	return fmt.Sprintf("expected %s got %s", expected, b.Tag())
 }
 
-func (baseData) Tag() Tag                             { return UNKNOWN }
-func (b *baseData) DecompiledClass() *DecompiledClass { panic(msg(b, "DecompiledClass")) }
-func (b *baseData) Bytecode() *Bytecode               { panic(msg(b, "Bytecode")) }
-func (b baseData) String() string                     { return b.Tag().String() }
+func (baseData) Tag() Tag         { return UNKNOWN }
+func (b baseData) String() string { return b.Tag().String() }

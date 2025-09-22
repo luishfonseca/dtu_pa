@@ -93,7 +93,7 @@ func constantPool(p *Parser) state.Fn[*Parser] {
 				return state.Fail[*Parser](err)
 			}
 
-			info.Class = &p.class.ConstantPool[cpIndex-1]
+			info.Clazz = &p.class.ConstantPool[cpIndex-1]
 
 			if err := p.readDecode(&cpIndex); err != nil {
 				return state.Fail[*Parser](err)
@@ -109,7 +109,7 @@ func constantPool(p *Parser) state.Fn[*Parser] {
 				return state.Fail[*Parser](err)
 			}
 
-			info.Class = &p.class.ConstantPool[cpIndex-1]
+			info.Clazz = &p.class.ConstantPool[cpIndex-1]
 
 			if err := p.readDecode(&cpIndex); err != nil {
 				return state.Fail[*Parser](err)

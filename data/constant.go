@@ -2,40 +2,14 @@ package data
 
 import "fmt"
 
-type Constant interface {
-	Tag() Tag
-	ConstantUtf8() *ConstantUtf8
-	ConstantInteger() *ConstantInteger
-	ConstantClass() *ConstantClass
-	ConstantNameAndType() *ConstantNameAndType
-	ConstantFieldref() *ConstantFieldref
-	ConstantMethodref() *ConstantMethodref
-	fmt.Stringer
-}
-
-type baseConstant struct{ Data }
-
-func (b *baseConstant) ConstantUtf8() *ConstantUtf8       { panic(msg(b, "ConstantUtf8")) }
-func (b *baseConstant) ConstantInteger() *ConstantInteger { panic(msg(b, "ConstantInteger")) }
-func (b *baseConstant) ConstantClass() *ConstantClass     { panic(msg(b, "ConstantClass")) }
-func (b *baseConstant) ConstantNameAndType() *ConstantNameAndType {
-	panic(msg(b, "ConstantNameAndType"))
-}
-func (b *baseConstant) ConstantFieldref() *ConstantFieldref   { panic(msg(b, "ConstantFieldref")) }
-func (b *baseConstant) ConstantMethodref() *ConstantMethodref { panic(msg(b, "ConstantMethodref")) }
-
 type ConstantUtf8 struct {
 	Value string
-	baseConstant
+	baseData
 }
 
-func (c *ConstantUtf8) ConstantUtf8() *ConstantUtf8 {
-	return c
-}
-
-func (*ConstantUtf8) Tag() Tag {
-	return CP_UTF8
-}
+func (c *ConstantUtf8) Tag() Tag                    { return CP_UTF8 }
+func (c *ConstantUtf8) ConstantUtf8() *ConstantUtf8 { return c }
+func (d *baseData) ConstantUtf8() *ConstantUtf8     { panic(msg(d, "ConstantUtf8")) }
 
 func (c ConstantUtf8) String() string {
 	return fmt.Sprintf("%q", c.Value)
@@ -43,16 +17,12 @@ func (c ConstantUtf8) String() string {
 
 type ConstantInteger struct {
 	Value int32
-	baseConstant
+	baseData
 }
 
-func (c *ConstantInteger) ConstantInteger() *ConstantInteger {
-	return c
-}
-
-func (*ConstantInteger) Tag() Tag {
-	return CP_INTEGER
-}
+func (c *ConstantInteger) Tag() Tag                          { return CP_INTEGER }
+func (c *ConstantInteger) ConstantInteger() *ConstantInteger { return c }
+func (d *baseData) ConstantInteger() *ConstantInteger        { panic(msg(d, "ConstantInteger")) }
 
 func (c ConstantInteger) String() string {
 	return fmt.Sprint(c.Value)
@@ -60,16 +30,12 @@ func (c ConstantInteger) String() string {
 
 type ConstantClass struct {
 	Name *Data
-	baseConstant
+	baseData
 }
 
-func (c *ConstantClass) ConstantClass() *ConstantClass {
-	return c
-}
-
-func (*ConstantClass) Tag() Tag {
-	return CP_CLASS
-}
+func (c *ConstantClass) Tag() Tag                      { return CP_CLASS }
+func (c *ConstantClass) ConstantClass() *ConstantClass { return c }
+func (d *baseData) ConstantClass() *ConstantClass      { panic(msg(d, "ConstantClass")) }
 
 func (c ConstantClass) String() string {
 	return fmt.Sprintf("<Class %s>", *c.Name)
@@ -78,53 +44,41 @@ func (c ConstantClass) String() string {
 type ConstantNameAndType struct {
 	Name       *Data
 	Descriptor *Data
-	baseConstant
+	baseData
 }
 
-func (c *ConstantNameAndType) NameAndTypeInfo() *ConstantNameAndType {
-	return c
-}
-
-func (*ConstantNameAndType) Tag() Tag {
-	return CP_NAME_AND_TYPE
-}
+func (c *ConstantNameAndType) Tag() Tag                                  { return CP_NAME_AND_TYPE }
+func (c *ConstantNameAndType) ConstantNameAndType() *ConstantNameAndType { return c }
+func (d *baseData) ConstantNameAndType() *ConstantNameAndType            { panic(msg(d, "ConstantNameAndType")) }
 
 func (c ConstantNameAndType) String() string {
 	return fmt.Sprintf("<NameAndType: %s, %s>", *c.Name, *c.Descriptor)
 }
 
 type ConstantFieldref struct {
-	Class       *Data
+	Clazz       *Data
 	NameAndType *Data
-	baseConstant
+	baseData
 }
 
-func (c *ConstantFieldref) FieldrefInfo() *ConstantFieldref {
-	return c
-}
-
-func (*ConstantFieldref) Tag() Tag {
-	return CP_FIELDREF
-}
+func (c *ConstantFieldref) Tag() Tag                            { return CP_FIELDREF }
+func (c *ConstantFieldref) ConstantFieldref() *ConstantFieldref { return c }
+func (d *baseData) ConstantFieldref() *ConstantFieldref         { panic(msg(d, "ConstantFieldref")) }
 
 func (c ConstantFieldref) String() string {
-	return fmt.Sprintf("<Fieldref: %s, %s>", *c.Class, *c.NameAndType)
+	return fmt.Sprintf("<Fieldref: %s, %s>", *c.Clazz, *c.NameAndType)
 }
 
 type ConstantMethodref struct {
-	Class       *Data
+	Clazz       *Data
 	NameAndType *Data
-	baseConstant
+	baseData
 }
 
-func (c *ConstantMethodref) MethodrefInfo() *ConstantMethodref {
-	return c
-}
-
-func (*ConstantMethodref) Tag() Tag {
-	return CP_METHODREF
-}
+func (c *ConstantMethodref) Tag() Tag                              { return CP_METHODREF }
+func (c *ConstantMethodref) ConstantMethodref() *ConstantMethodref { return c }
+func (d *baseData) ConstantMethodref() *ConstantMethodref          { panic(msg(d, "ConstantMethodref")) }
 
 func (c ConstantMethodref) String() string {
-	return fmt.Sprintf("<Methodref: %s, %s>", *c.Class, *c.NameAndType)
+	return fmt.Sprintf("<Methodref: %s, %s>", *c.Clazz, *c.NameAndType)
 }

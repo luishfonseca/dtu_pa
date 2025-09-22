@@ -2,7 +2,7 @@ package data
 
 import "fmt"
 
-type DecompiledClass struct {
+type Class struct {
 	Version      string
 	ConstantPool []Data
 	AccessFlags  AccessFlags
@@ -14,15 +14,11 @@ type DecompiledClass struct {
 	baseData
 }
 
-func (c *DecompiledClass) DecompiledClass() *DecompiledClass {
-	return c
-}
+func (c *Class) Tag() Tag         { return CLASS }
+func (c *Class) Class() *Class    { return c }
+func (d *baseData) Class() *Class { panic(msg(d, "Class")) }
 
-func (*DecompiledClass) Tag() Tag {
-	return DECOMPILED_CLASS
-}
-
-func (c *DecompiledClass) Method(name string, descriptor string) *MemberInfo {
+func (c *Class) Method(name string, descriptor string) *MemberInfo {
 	for _, method := range c.Methods {
 		if method.Name.Value == name && method.Descriptor.Value == descriptor {
 			return &method
@@ -31,8 +27,8 @@ func (c *DecompiledClass) Method(name string, descriptor string) *MemberInfo {
 	return nil
 }
 
-func (c DecompiledClass) String() string {
-	str := "DecompiledClass {\n"
+func (c Class) String() string {
+	str := "Class {\n"
 	str += fmt.Sprintln("  Version:", c.Version)
 	str += "  ConstantPool: [\n"
 	for i, constant := range c.ConstantPool {

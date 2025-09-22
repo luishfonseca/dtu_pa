@@ -2,40 +2,6 @@ package data
 
 import "fmt"
 
-type Attribute interface {
-	Tag() Tag
-	AttributeCode() *AttributeCode
-	AttributeSourceFile() *AttributeSourceFile
-	AttributeRuntimeVisibleAnnotations() *AttributeRuntimeVisibleAnnotations
-	AttributeInnerClasses() *AttributeInnerClasses
-	AttributeLineNumberTable() *AttributeLineNumberTable
-	AttributeLocalVariableTable() *AttributeLocalVariableTable
-	AttributeStackMapTable() *AttributeStackMapTable
-	fmt.Stringer
-}
-
-type baseAttribute struct{ Data }
-
-func (b *baseAttribute) AttributeCode() *AttributeCode { panic(msg(b, "AttributeCode")) }
-func (b *baseAttribute) AttributeSourceFile() *AttributeSourceFile {
-	panic(msg(b, "AttributeSourceFile"))
-}
-func (b *baseAttribute) AttributeRuntimeVisibleAnnotations() *AttributeRuntimeVisibleAnnotations {
-	panic(msg(b, "AttributeRuntimeVisibleAnnotations"))
-}
-func (b *baseAttribute) AttributeInnerClasses() *AttributeInnerClasses {
-	panic(msg(b, "AttributeInnerClasses"))
-}
-func (b *baseAttribute) AttributeLineNumberTable() *AttributeLineNumberTable {
-	panic(msg(b, "AttributeLineNumberTable"))
-}
-func (b *baseAttribute) AttributeLocalVariableTable() *AttributeLocalVariableTable {
-	panic(msg(b, "AttributeLocalVariableTable"))
-}
-func (b *baseAttribute) AttributeStackMapTable() *AttributeStackMapTable {
-	panic(msg(b, "AttributeStackMapTable"))
-}
-
 type ExceptionTableEntry struct {
 	StartPC   uint16
 	EndPC     uint16
@@ -58,16 +24,12 @@ type AttributeCode struct {
 	CodeHandle     BytecodeHandle
 	ExceptionTable []ExceptionTableEntry
 	Attributes     []AttributeHandle
-	baseAttribute
+	baseData
 }
 
-func (a *AttributeCode) AttributeCode() *AttributeCode {
-	return a
-}
-
-func (*AttributeCode) Tag() Tag {
-	return ATTR_CODE
-}
+func (a *AttributeCode) Tag() Tag                      { return ATTR_CODE }
+func (a *AttributeCode) AttributeCode() *AttributeCode { return a }
+func (d *baseData) AttributeCode() *AttributeCode      { panic(msg(d, "AttributeCode")) }
 
 func (a AttributeCode) String() string {
 	str := "AttributeCode {"
@@ -87,74 +49,56 @@ func (a AttributeCode) String() string {
 	return str
 }
 
-type AttributeSourceFile struct {
-	baseAttribute
-}
+type AttributeSourceFile struct{ baseData }
 
-func (a *AttributeSourceFile) AttributeSourceFile() *AttributeSourceFile {
-	return a
-}
+func (a *AttributeSourceFile) Tag() Tag                                  { return ATTR_SOURCE_FILE }
+func (a *AttributeSourceFile) AttributeSourceFile() *AttributeSourceFile { return a }
+func (d *baseData) AttributeSourceFile() *AttributeSourceFile            { panic(msg(d, "AttributeSourceFile")) }
 
-func (*AttributeSourceFile) Tag() Tag {
-	return ATTR_SOURCE_FILE
-}
+type AttributeRuntimeVisibleAnnotations struct{ baseData }
 
-type AttributeRuntimeVisibleAnnotations struct {
-	baseAttribute
-}
-
+func (a *AttributeRuntimeVisibleAnnotations) Tag() Tag { return ATTR_RUNTIME_VISIBLE_ANNOTATIONS }
 func (a *AttributeRuntimeVisibleAnnotations) AttributeRuntimeVisibleAnnotations() *AttributeRuntimeVisibleAnnotations {
 	return a
 }
-
-func (*AttributeRuntimeVisibleAnnotations) Tag() Tag {
-	return ATTR_RUNTIME_VISIBLE_ANNOTATIONS
+func (d *baseData) AttributeRuntimeVisibleAnnotations() *AttributeRuntimeVisibleAnnotations {
+	panic(msg(d, "AttributeRuntimeVisibleAnnotations"))
 }
 
-type AttributeInnerClasses struct {
-	baseAttribute
+type AttributeInnerClasses struct{ baseData }
+
+func (a *AttributeInnerClasses) Tag() Tag                                      { return ATTR_INNER_CLASSES }
+func (a *AttributeInnerClasses) AttributeInnerClasses() *AttributeInnerClasses { return a }
+func (d *baseData) AttributeInnerClasses() *AttributeInnerClasses {
+	panic(msg(d, "AttributeInnerClasses"))
 }
 
-func (a *AttributeInnerClasses) AttributeInnerClasses() *AttributeInnerClasses {
-	return a
-}
+type AttributeLineNumberTable struct{ baseData }
 
-func (*AttributeInnerClasses) Tag() Tag {
-	return ATTR_INNER_CLASSES
-}
-
-type AttributeLineNumberTable struct {
-	baseAttribute
-}
-
+func (a *AttributeLineNumberTable) Tag() Tag { return ATTR_LINE_NUMBER_TABLE }
 func (a *AttributeLineNumberTable) AttributeLineNumberTable() *AttributeLineNumberTable {
 	return a
 }
-
-func (*AttributeLineNumberTable) Tag() Tag {
-	return ATTR_LINE_NUMBER_TABLE
+func (d *baseData) AttributeLineNumberTable() *AttributeLineNumberTable {
+	panic(msg(d, "AttributeLineNumberTable"))
 }
 
-type AttributeLocalVariableTable struct {
-	baseAttribute
-}
+type AttributeLocalVariableTable struct{ baseData }
 
+func (a *AttributeLocalVariableTable) Tag() Tag { return ATTR_LOCAL_VARIABLE_TABLE }
 func (a *AttributeLocalVariableTable) AttributeLocalVariableTable() *AttributeLocalVariableTable {
 	return a
 }
-
-func (*AttributeLocalVariableTable) Tag() Tag {
-	return ATTR_LOCAL_VARIABLE_TABLE
+func (d *baseData) AttributeLocalVariableTable() *AttributeLocalVariableTable {
+	panic(msg(d, "AttributeLocalVariableTable"))
 }
 
-type AttributeStackMapTable struct {
-	baseAttribute
-}
+type AttributeStackMapTable struct{ baseData }
 
+func (a *AttributeStackMapTable) Tag() Tag { return ATTR_STACK_MAP_TABLE }
 func (a *AttributeStackMapTable) AttributeStackMapTable() *AttributeStackMapTable {
 	return a
 }
-
-func (*AttributeStackMapTable) Tag() Tag {
-	return ATTR_STACK_MAP_TABLE
+func (d *baseData) AttributeStackMapTable() *AttributeStackMapTable {
+	panic(msg(d, "AttributeStackMapTable"))
 }

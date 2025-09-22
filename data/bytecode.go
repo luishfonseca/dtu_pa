@@ -233,13 +233,9 @@ type Bytecode struct {
 	baseData
 }
 
-func (b *Bytecode) Bytecode() *Bytecode {
-	return b
-}
-
-func (*Bytecode) Tag() Tag {
-	return BYTECODE
-}
+func (b *Bytecode) Tag() Tag            { return BYTECODE }
+func (b *Bytecode) Bytecode() *Bytecode { return b }
+func (d *baseData) Bytecode() *Bytecode { panic(msg(d, "Bytecode")) }
 
 func (b Bytecode) String() string {
 	str := "Bytecode["
